@@ -5,5 +5,19 @@ linters-settings:
     check-shadowing: true
 
 linters:
+  presets:
+    - bugs
+    - unused
+    - error
+    - style
   enable:
-    - goimports
+    - gosec
+    - revive
+    - exportloopref
+  disable:
+    - interfacer
+    - golint
+    - scopelint
+    - tparallel
+    - paralleltest
+    

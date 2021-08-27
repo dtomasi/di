@@ -1,7 +1,8 @@
-package di
+package di_test
 
 import (
 	"context"
+	"github.com/dtomasi/di"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
@@ -13,19 +14,25 @@ type TestInterface interface {
 }
 
 type TestService1 struct {
-	ctx context.Context
-	c *Container
-	pp ParameterProvider
-	true bool
+	ctx        context.Context
+	c          *di.Container
+	pp         di.ParameterProvider
+	isTrue     bool
 	testString string
 }
 
-func NewTestService1(ctx context.Context, c *Container,pp ParameterProvider, true bool, testString string) *TestService1 {
+func NewTestService1(
+	ctx context.Context,
+	c *di.Container,
+	pp di.ParameterProvider,
+	isTrue bool,
+	testString string,
+) *TestService1 {
 	return &TestService1{
-		ctx: ctx,
-		c: c,
-		pp: pp,
-		true: true,
+		ctx:        ctx,
+		c:          c,
+		pp:         pp,
+		isTrue:     isTrue,
 		testString: testString,
 	}
 }
@@ -34,16 +41,16 @@ func (ti *TestService1) Context() context.Context {
 	return ti.ctx
 }
 
-func (ti *TestService1) Container() *Container {
+func (ti *TestService1) Container() *di.Container {
 	return ti.c
 }
 
-func (ti *TestService1) ParamProvider() ParameterProvider {
+func (ti *TestService1) ParamProvider() di.ParameterProvider {
 	return ti.pp
 }
 
 func (ti *TestService1) True() bool {
-	return ti.true
+	return ti.isTrue
 }
 
 func (ti *TestService1) TestString() string {
@@ -52,16 +59,16 @@ func (ti *TestService1) TestString() string {
 
 type TestService2 struct {
 	testService1 TestInterface
-	true bool
-	testString string
+	isTrue       bool
+	testString   string
 }
 
-func NewTestService2(service1 TestInterface, true bool, testString string) *TestService2 {
-	return &TestService2{testService1: service1, true: true, testString: testString}
+func NewTestService2(service1 TestInterface, isTrue bool, testString string) *TestService2 {
+	return &TestService2{testService1: service1, isTrue: isTrue, testString: testString}
 }
 
 func (ti *TestService2) True() bool {
-	return ti.true
+	return ti.isTrue
 }
 
 func (ti *TestService2) TestString() string {
@@ -72,95 +79,93 @@ func (ti *TestService2) TestService1() TestInterface {
 	return ti.testService1
 }
 
-type ParameterProviderMock struct {}
+type ParameterProviderMock struct{}
 
-func (m *ParameterProviderMock) Get(key string) (interface{}, error) {
+func (m *ParameterProviderMock) Get(_ string) (interface{}, error) {
 	return "foo", nil
 }
-func (m *ParameterProviderMock) Set(key string, value interface{}) error {
+func (m *ParameterProviderMock) Set(_ string, _ interface{}) error {
 	return nil
 }
 
 func BuildContainer() error {
-	i := DefaultContainer()
+	i := di.DefaultContainer()
 	i.SetParameterProvider(&ParameterProviderMock{})
 
 	i.Register(
-		NewServiceDef(StringRef("TestService1")).
+		di.NewServiceDef(di.StringRef("TestService1")).
 			Provider(NewTestService1).
 			Args(
-				ContextArg(),
-				ContainerArg(),
-				ParamProviderArg(),
-				InterfaceArg(true),
-				ParamArg("foo.bar.baz"),
-
+				di.ContextArg(),
+				di.ContainerArg(),
+				di.ParamProviderArg(),
+				di.InterfaceArg(true),
+				di.ParamArg("foo.bar.baz"),
 			),
 
-		NewServiceDef(StringRef("TestService2")).
+		di.NewServiceDef(di.StringRef("TestService2")).
 			Provider(NewTestService2).
 			Args(
-				ServiceArg(StringRef("TestService1")),
-				InterfaceArg(true),
-				ParamArg("foo.bar.baz"),
+				di.ServiceArg(di.StringRef("TestService1")),
+				di.InterfaceArg(true),
+				di.ParamArg("foo.bar.baz"),
 			),
 	)
-	return i.Build(context.Background())
+
+	return i.Build(context.Background()) //nolint:wrapcheck
 }
 
-
 func TestGetContainer(t *testing.T) {
-	ci := DefaultContainer()
-	if ci == nil {
+	if di.DefaultContainer() == nil {
 		t.Error("DefaultContainer returns nil value")
 	}
 }
 
 func TestContainer_Build(t *testing.T) {
-
-	err := BuildContainer()
+	err := BuildContainer() //nolint:ifshort
 	if err != nil {
 		t.Error(err)
 	}
 
-	ci := DefaultContainer()
+	ci := di.DefaultContainer()
 
-	t1 := ci.MustGet(StringRef("TestService1")).(*TestService1)
+	t1 := ci.MustGet(di.StringRef("TestService1")).(*TestService1) //nolint:forcetypeassert
 
-	assert.IsType(t, &TestService1{}, t1)
+	assert.IsType(t, &TestService1{}, t1) //nolint:exhaustivestruct
 	assert.Implements(t, (*context.Context)(nil), t1.Context())
-	assert.IsType(t, &Container{}, t1.Container())
-	assert.Implements(t, (*ParameterProvider)(nil), t1.ParamProvider())
+	assert.IsType(t, &di.Container{}, t1.Container())
+	assert.Implements(t, (*di.ParameterProvider)(nil), t1.ParamProvider())
 	assert.True(t, t1.True())
 	assert.Equal(t, "foo", t1.TestString())
 
-	t2 := ci.MustGet(StringRef("TestService2")).(*TestService2)
-	assert.IsType(t, &TestService2{}, t2)
+	t2 := ci.MustGet(di.StringRef("TestService2")).(*TestService2) //nolint:forcetypeassert
+	assert.IsType(t, &TestService2{}, t2)                          //nolint:exhaustivestruct
 	assert.Implements(t, (*TestInterface)(nil), t2)
 	assert.True(t, t2.True())
 	assert.Equal(t, "foo", t2.TestString())
-	assert.IsType(t, &TestService1{}, t2.TestService1())
+	assert.IsType(t, &TestService1{}, t2.TestService1()) //nolint:exhaustivestruct
 }
 
 func TestContainer_Build_ConcurrentRead(t *testing.T) {
-	err := BuildContainer()
+	err := BuildContainer() //nolint:ifshort
 	if err != nil {
 		t.Error(err)
 	}
 
-	for i:=0;i < 10;i++ {
+	for i := 0; i < 10; i++ {
 		go func() {
-			ci := DefaultContainer()
-			for j:=0;j<10;j++ {
-				_, err := ci.Get(StringRef("TestService1"))
+			ci := di.DefaultContainer()
+
+			for j := 0; j < 10; j++ {
+				_, err := ci.Get(di.StringRef("TestService1"))
 				if err != nil {
 					t.Error(err)
 				}
+
 				rand.Seed(time.Now().UnixNano())
-				n := rand.Intn(100)
-				time.Sleep(time.Duration(n)*time.Millisecond)
+				n := rand.Intn(100) //nolint:gosec
+				time.Sleep(time.Duration(n) * time.Millisecond)
 			}
 		}()
 	}
-
 }

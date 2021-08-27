@@ -11,7 +11,7 @@ type serviceMap struct {
 }
 
 func newServiceMap() *serviceMap {
-	return &serviceMap{
+	return &serviceMap{ //nolint:exhaustivestruct
 		internal: map[fmt.Stringer]interface{}{},
 	}
 }
@@ -20,6 +20,7 @@ func (rm *serviceMap) Load(key fmt.Stringer) (value interface{}, ok bool) {
 	rm.RLock()
 	result, ok := rm.internal[key]
 	rm.RUnlock()
+
 	return result, ok
 }
 
@@ -45,11 +46,11 @@ func (rm *serviceMap) Clear() {
 	rm.Unlock()
 }
 
-func (rm *serviceMap) Range(f func(key, value interface{}) bool)  {
+func (rm *serviceMap) Range(f func(key, value interface{}) bool) {
 	rm.RLock()
-	for k,v := range rm.internal {
-		retVal := f(k,v)
-		if !retVal{
+	for k, v := range rm.internal {
+		retVal := f(k, v)
+		if !retVal {
 			break
 		}
 	}
