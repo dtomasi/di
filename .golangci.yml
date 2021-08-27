@@ -1,0 +1,9 @@
+linters-settings:
+  goimports:
+    simplify: true
+  govet:
+    check-shadowing: true
+
+linters:
+  enable:
+    - goimports
