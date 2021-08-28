@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 )
 
 const (
@@ -15,7 +14,7 @@ const (
 
 var (
 	// Container is a singleton/global instance.
-	c *Container //nolint:gochecknoglobals
+	defaultContainer *Container //nolint:gochecknoglobals
 
 	errContainer        = errors.New("container error")
 	errBuildingService  = errors.New("service build error")
@@ -27,7 +26,6 @@ type Container struct {
 	ctx           context.Context
 	paramProvider ParameterProvider
 	serviceDefs   *serviceMap
-	services      *serviceMap
 }
 
 // NewServiceContainer returns a new Container instance.
@@ -36,17 +34,16 @@ func NewServiceContainer() *Container {
 		ctx:           nil,
 		paramProvider: nil,
 		serviceDefs:   newServiceMap(),
-		services:      newServiceMap(),
 	}
 }
 
 // DefaultContainer returns the default Container instance.
 func DefaultContainer() *Container {
-	if c == nil {
-		c = NewServiceContainer()
+	if defaultContainer == nil {
+		defaultContainer = NewServiceContainer()
 	}
 
-	return c
+	return defaultContainer
 }
 
 // SetParameterProvider allows to define a provider for fetching parameters using dot.notation.
@@ -67,28 +64,29 @@ func (c *Container) Register(defs ...*ServiceDef) {
 }
 
 // Set sets a service to container.
-func (c *Container) Set(ref fmt.Stringer, service interface{}) *Container {
-	c.services.Store(ref, service)
+func (c *Container) Set(ref fmt.Stringer, s interface{}) *Container {
+	c.serviceDefs.Store(ref, &ServiceDef{ //nolint:exhaustivestruct
+		instance: s,
+		options:  newServiceOptions(),
+		tags:     []fmt.Stringer{},
+	})
 
 	return c
 }
 
 // Get returns a requested service.
 func (c *Container) Get(ref fmt.Stringer) (interface{}, error) {
-	if service, ok := c.services.Load(ref); ok {
-		return service, nil
-	}
-
-	if def, ok := c.serviceDefs.Load(ref); ok { // build the service regardless of lazy.
-		s, err := c.buildServiceFromDefinition(def.(*ServiceDef))
-		if err != nil {
-			return nil, err
+	var err error
+	// s is a service object
+	if sd, ok := c.serviceDefs.Load(ref); ok {
+		if sd.instance == nil {
+			sd.instance, err = c.buildServiceInstance(sd)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		// Save the created service instance to services map,
-		c.services.Store(ref, s)
-
-		return s, nil
+		return sd.instance, nil
 	}
 
 	return nil, newError(errContainer, fmt.Sprintf("service %s not found", ref))
@@ -104,35 +102,60 @@ func (c *Container) MustGet(ref fmt.Stringer) interface{} {
 	return i
 }
 
+func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
+	var instances []interface{}
+
+	err := c.serviceDefs.Range(func(key fmt.Stringer, def *ServiceDef) error {
+		for _, defTag := range def.tags {
+			if defTag == tag {
+				// use Get to ensure the service is built if not already.
+				s, err := c.Get(key)
+				if err != nil {
+					return err
+				}
+				instances = append(instances, s)
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, newError(errContainer, err)
+	}
+
+	return instances, nil
+}
+
 // Build will build the service container.
 func (c *Container) Build(ctx context.Context) error {
 	c.ctx = ctx
 
-	var buildErrors []string
-
-	c.serviceDefs.Range(func(key, value interface{}) bool {
+	err := c.serviceDefs.Range(func(key fmt.Stringer, serviceDef *ServiceDef) error {
 		// skip lazy initializing services here
-		if value.(*ServiceDef).options.buildOnFirstRequest {
-			return true
+		if serviceDef.options.buildOnFirstRequest {
+			return nil
 		}
 
-		_, err := c.Get(value.(*ServiceDef).ref)
+		// we just run get without expecting an instance is returned.
+		// this will trigger build if definition instance is nil.
+		_, err := c.Get(key)
 		if err != nil {
-			buildErrors = append(buildErrors, err.Error())
+			return err
 		}
 
 		// return true as we want to get all build errors as an output here.
-		return true
+		return nil
 	})
 
-	if len(buildErrors) > 0 {
-		return newError(errContainer, fmt.Errorf(strings.Join(buildErrors, "\n"))) //nolint:goerr113
+	if err != nil {
+		return newError(errBuildingService, err)
 	}
 
 	return nil
 }
 
-func (c *Container) buildServiceFromDefinition(def *ServiceDef) (interface{}, error) {
+func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 	parsedArgs, err := c.parseParameters(def)
 	if err != nil {
 		return nil, err
@@ -184,12 +207,12 @@ func (c *Container) buildServiceFromDefinition(def *ServiceDef) (interface{}, er
 		case singleReturnValue:
 			return returnValues[0].Interface(), nil
 		case doubleReturnValue:
-			err, ok := returnValues[1].Interface().(error)
+			providerErr, ok := returnValues[1].Interface().(error)
 			if !ok {
-				err = nil
+				providerErr = nil
 			}
 
-			return returnValues[0].Interface(), err
+			return returnValues[0].Interface(), providerErr
 
 		default:
 			return nil, newError(
@@ -202,19 +225,22 @@ func (c *Container) buildServiceFromDefinition(def *ServiceDef) (interface{}, er
 	return nil, newError(errBuildingService, fmt.Sprintf("no provider function set for service %s", def.ref))
 }
 
+// parseParameters parses the arguments and assigns values by arg type.
+// this function returns a new arg slice that is used for building the service
+// without touching the original defined args.
 func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 	var parsedArgs []Arg
 
 	for _, v := range def.args {
 		switch v._type {
 		case ArgTypeService:
-			service, err := c.Get(v.value.(fmt.Stringer))
+			s, err := c.Get(v.value.(fmt.Stringer))
 			if err != nil {
 				return nil, newError(errParameterParsing, err)
 			}
 
 			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: service,
+				value: s,
 			})
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))

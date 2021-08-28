@@ -13,50 +13,36 @@ func (r StringRef) String() string {
 	return string(r)
 }
 
-// ServiceDefOption defines an option function.
-type ServiceDefOption func(def *ServiceDef)
-
-// BuildOnFirstRequest option will not create an instance from on building the container.
-// Instead, it will wait until the service is requested the first time.
-func BuildOnFirstRequest() ServiceDefOption {
-	return func(sd *ServiceDef) {
-		sd.options.buildOnFirstRequest = true
-	}
-}
-
-// serviceDefOptions lifecycle options for definition.
-type serviceDefOptions struct {
-	buildOnFirstRequest bool
-}
-
 // ServiceDef is a definition of a service
 // it describes how a service should be created and handled inside the
 // service container.
 type ServiceDef struct {
 	ref      fmt.Stringer
-	options  serviceDefOptions
+	instance interface{}
+	options  *serviceOptions
 	provider interface{}
 	args     []Arg
+	tags     []fmt.Stringer
 }
 
 // NewServiceDef creates a new service definition.
 func NewServiceDef(ref fmt.Stringer) *ServiceDef {
 	i := &ServiceDef{
-		ref: ref,
-		options: serviceDefOptions{
-			buildOnFirstRequest: false,
-		},
+		ref:      ref,
+		instance: nil,
+		options:  newServiceOptions(),
 		provider: nil,
 		args:     []Arg{},
+		tags:     []fmt.Stringer{},
 	}
 
 	return i
 }
 
 // Opts allows to set some options for lifecycle management.
-func (sd *ServiceDef) Opts(opts ...ServiceDefOption) *ServiceDef {
+func (sd *ServiceDef) Opts(opts ...ServiceOption) *ServiceDef {
 	for _, opt := range opts {
-		opt(sd)
+		opt(sd.options)
 	}
 
 	return sd
@@ -73,6 +59,13 @@ func (sd *ServiceDef) Provider(provider interface{}) *ServiceDef {
 // Args accepts multiple constructor/provider function arguments.
 func (sd *ServiceDef) Args(args ...Arg) *ServiceDef {
 	sd.args = append(sd.args, args...)
+
+	return sd
+}
+
+// AddTag allows to add a tag to a service definition.
+func (sd *ServiceDef) AddTag(name fmt.Stringer) *ServiceDef {
+	sd.tags = append(sd.tags, name)
 
 	return sd
 }
