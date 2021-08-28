@@ -102,6 +102,7 @@ func (c *Container) MustGet(ref fmt.Stringer) interface{} {
 	return i
 }
 
+// FindByTag finds all service instances with given tag and returns them as a slice.
 func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
 	var instances []interface{}
 
