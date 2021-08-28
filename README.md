@@ -1,5 +1,6 @@
 # di (Dependency Injection)
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/dtomasi/di.svg)](https://pkg.go.dev/github.com/dtomasi/di)
 [![CodeFactor](https://www.codefactor.io/repository/github/dtomasi/di/badge)](https://www.codefactor.io/repository/github/dtomasi/di)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dtomasi/di/main.svg)](https://results.pre-commit.ci/latest/github/dtomasi/di/main)
 ![Go Unit Tests](https://github.com/dtomasi/di/actions/workflows/build.yml/badge.svg)
