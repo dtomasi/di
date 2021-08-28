@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dtomasi/fakr"
 	"github.com/go-logr/logr"
 	"reflect"
 )
@@ -42,7 +43,7 @@ func NewServiceContainer(opts ...Option) *Container {
 		ctx: context.Background(),
 
 		// Init a silent logger. This can be overwritten with WithLogrImpl().
-		logger:        logr.Logger{},
+		logger:        fakr.New(),
 		paramProvider: &NoParameterProvider{},
 		serviceDefs:   newServiceMap(),
 	}

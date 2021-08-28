@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
+	github.com/dtomasi/fakr v0.0.1
 	github.com/go-logr/logr v1.1.0
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
