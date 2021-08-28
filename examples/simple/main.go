@@ -52,7 +52,7 @@ Steps:
 - build the container
 - request services and print greeting depending on daytime
 
-example output can be found in output.txt
+example output can be found in output.txt.
 */
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -99,11 +99,15 @@ func main() {
 			).
 			Provider(greeter.NewGreeter).
 			Args(
+				di.ContextArg(),
+				di.LoggerArg(),
 				di.ParamArg("morning"),
 			),
 		di.NewServiceDef(greeter.ServiceGreeterAfternoon).
 			Provider(greeter.NewGreeter).
 			Args(
+				di.ContextArg(),
+				di.LoggerArg(),
 				di.ParamArg("afternoon"),
 			),
 		di.NewServiceDef(greeter.ServiceGreeterEvening).
@@ -113,6 +117,8 @@ func main() {
 			).
 			Provider(greeter.NewGreeter).
 			Args(
+				di.ContextArg(),
+				di.LoggerArg(),
 				di.ParamArg("evening"),
 			),
 	)

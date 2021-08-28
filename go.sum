@@ -1,7 +1,5 @@
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dtomasi/fakr v0.0.1 h1:EqST+rq9BGURkW/o25ubsHdio1Y0dQa0GzYCR1hnK4A=
-github.com/dtomasi/fakr v0.0.1/go.mod h1:XFdhmI2vdsO2VUlfU6eQpis6+mdqhXU6fj7fLidU22s=
 github.com/dtomasi/fakr v0.0.2 h1:PYLtgDhxFCfkuk7JfrMrLamUaBKxkz2PcDJ1y4YgvEI=
 github.com/dtomasi/fakr v0.0.2/go.mod h1:XFdhmI2vdsO2VUlfU6eQpis6+mdqhXU6fj7fLidU22s=
 github.com/dtomasi/fakr v0.0.3 h1:Eb6jizDQsimeIxbLBgz+Abwv5fK+qQ1tpc7u3Po4kbA=
