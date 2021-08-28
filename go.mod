@@ -1,6 +1,6 @@
 module github.com/dtomasi/di
 
-go 1.16
+go 1.17
 
 require (
 	github.com/mcuadros/go-defaults v1.2.0
