@@ -22,18 +22,8 @@ import (
 	"github.com/dtomasi/di"
 )
 
-type ParameterProviderMock struct{}
-
-func (m *ParameterProviderMock) Get(_ string) (interface{}, error) {
-	return "foo", nil
-}
-func (m *ParameterProviderMock) Set(_ string, _ interface{}) error {
-	return nil
-}
-
 func BuildContainer() error {
 	i := di.DefaultContainer()
-	i.SetParameterProvider(&ParameterProviderMock{})
 
 	i.Register(
 		// Services are registered using fmt.Stringer interface.
@@ -63,7 +53,7 @@ func BuildContainer() error {
 	)
 
 	// Builds all services
-	return i.Build(context.Background()) //nolint:wrapcheck
+	return i.Build() //nolint:wrapcheck
 }
 
 func main() {
@@ -73,7 +63,7 @@ func main() {
     	panic(err)
     }
 
-	testService := di.DefaultContainer().MustGet(di.StringRef("TestService1"))
+    testService := di.DefaultContainer().MustGet(di.StringRef("TestService1"))
 }
 
 ```

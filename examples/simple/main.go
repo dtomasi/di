@@ -53,7 +53,7 @@ Steps:
 - request services and print greeting depending on daytime
 
 example output can be found in output.txt
- */
+*/
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -96,7 +96,7 @@ func main() {
 			Opts(
 				// This one is not built on calling Build()
 				di.BuildOnFirstRequest(),
-				).
+			).
 			Provider(greeter.NewGreeter).
 			Args(
 				di.ParamArg("morning"),

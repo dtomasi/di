@@ -31,22 +31,22 @@ var (
 
 // Container is the actual service container struct.
 type Container struct {
-	ctx            context.Context
+	ctx context.Context
 	// originalLogger is used for injection.
-	originalLogger         logr.Logger
+	originalLogger logr.Logger
 	// logger is used for internal logs.
-	logger logr.Logger
-	paramProvider  ParameterProvider
-	serviceDefs    *serviceMap
+	logger        logr.Logger
+	paramProvider ParameterProvider
+	serviceDefs   *serviceMap
 }
 
 // NewServiceContainer returns a new Container instance.
 func NewServiceContainer(opts ...Option) *Container {
 	i := &Container{ //nolint:exhaustivestruct
-		ctx: context.Background(),
-		originalLogger:        fakr.New(),
-		paramProvider: &NoParameterProvider{},
-		serviceDefs:   newServiceMap(),
+		ctx:            context.Background(),
+		originalLogger: fakr.New(),
+		paramProvider:  &NoParameterProvider{},
+		serviceDefs:    newServiceMap(),
 	}
 
 	for _, opt := range opts {
