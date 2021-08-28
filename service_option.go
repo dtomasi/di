@@ -1,6 +1,8 @@
 package di
 
-import "github.com/mcuadros/go-defaults"
+import (
+	"github.com/mcuadros/go-defaults"
+)
 
 // ServiceOption defines an option function.
 type ServiceOption func(so *serviceOptions)
