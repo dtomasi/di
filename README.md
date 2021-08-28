@@ -1,6 +1,10 @@
 # di (Dependency Injection)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/dtomasi/di/badge)](https://www.codefactor.io/repository/github/dtomasi/di)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dtomasi/di/main.svg)](https://results.pre-commit.ci/latest/github/dtomasi/di/main)
+![Go Unit Tests](https://github.com/dtomasi/di/actions/workflows/build.yml/badge.svg)
+![CodeQL](https://github.com/dtomasi/di/actions/workflows/codeql-analysis.yml/badge.svg)
+
 
 ## Installation
 
