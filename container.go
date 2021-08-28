@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-logr/logr"
 	"reflect"
 )
 
@@ -15,6 +16,11 @@ const (
 var (
 	// Container is a singleton/global instance.
 	defaultContainer *Container //nolint:gochecknoglobals
+	// To avoid recreation of default container.
+	defaultContainerOptsSet bool //nolint:gochecknoglobals
+
+	loggerName           = "di" //nolint:gochecknoglobals
+	loggerDebugVerbosity = 6    //nolint:gochecknoglobals
 
 	errContainer        = errors.New("container error")
 	errBuildingService  = errors.New("service build error")
@@ -24,17 +30,31 @@ var (
 // Container is the actual service container struct.
 type Container struct {
 	ctx           context.Context
+	logger        logr.Logger
 	paramProvider ParameterProvider
 	serviceDefs   *serviceMap
 }
 
 // NewServiceContainer returns a new Container instance.
-func NewServiceContainer() *Container {
-	return &Container{
-		ctx:           nil,
-		paramProvider: nil,
+func NewServiceContainer(opts ...Option) *Container {
+	i := &Container{
+		// create a context. This can be overridden using option WithContext().
+		ctx: context.Background(),
+
+		// Init a silent logger. This can be overwritten with WithLogrImpl().
+		logger:        logr.Logger{},
+		paramProvider: &NoParameterProvider{},
 		serviceDefs:   newServiceMap(),
 	}
+
+	for _, opt := range opts {
+		opt(i)
+	}
+
+	// Setup logger name
+	i.logger = i.logger.WithName(loggerName)
+
+	return i
 }
 
 // DefaultContainer returns the default Container instance.
@@ -42,6 +62,19 @@ func DefaultContainer() *Container {
 	if defaultContainer == nil {
 		defaultContainer = NewServiceContainer()
 	}
+
+	return defaultContainer
+}
+
+// Opts allows to configure/recreate the default container
+// NOTE: this panics if it is called more than once.
+func Opts(opts ...Option) *Container {
+	if defaultContainerOptsSet {
+		panic("detected multiple calls to Opts on default container")
+	}
+
+	defaultContainer = NewServiceContainer(opts...)
+	defaultContainerOptsSet = true
 
 	return defaultContainer
 }
@@ -79,7 +112,7 @@ func (c *Container) Get(ref fmt.Stringer) (interface{}, error) {
 	var err error
 	// s is a service object
 	if sd, ok := c.serviceDefs.Load(ref); ok {
-		if sd.instance == nil {
+		if sd.instance == nil || sd.options.alwaysRebuild {
 			sd.instance, err = c.buildServiceInstance(sd)
 			if err != nil {
 				return nil, err
@@ -129,12 +162,18 @@ func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
 }
 
 // Build will build the service container.
-func (c *Container) Build(ctx context.Context) error {
-	c.ctx = ctx
+func (c *Container) Build() error {
+	c.logger.V(loggerDebugVerbosity).Info("starting container build")
 
 	err := c.serviceDefs.Range(func(key fmt.Stringer, serviceDef *ServiceDef) error {
+		c.logger.V(loggerDebugVerbosity).Info("building services", "name", key.String())
+
 		// skip lazy initializing services here
-		if serviceDef.options.buildOnFirstRequest {
+		if serviceDef.options.buildOnFirstRequest || serviceDef.options.alwaysRebuild {
+			c.logger.V(loggerDebugVerbosity).
+				Info("skipping service because its set to lazy or should be rebuilt on each request",
+					"name", key.String())
+
 			return nil
 		}
 
@@ -142,6 +181,8 @@ func (c *Container) Build(ctx context.Context) error {
 		// this will trigger build if definition instance is nil.
 		_, err := c.Get(key)
 		if err != nil {
+			c.logger.V(1).Error(err, "creation of service failed", "name", key.String())
+
 			return err
 		}
 
@@ -150,8 +191,12 @@ func (c *Container) Build(ctx context.Context) error {
 	})
 
 	if err != nil {
+		c.logger.V(1).Error(err, "container build failed")
+
 		return newError(errBuildingService, err)
 	}
+
+	c.logger.V(loggerDebugVerbosity).Info("container built successfully")
 
 	return nil
 }
@@ -232,6 +277,8 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 	var parsedArgs []Arg
 
+	c.logger.V(loggerDebugVerbosity).Info("parsing parameters for provider of services", "name", def.ref.String())
+
 	for _, v := range def.args {
 		switch v._type {
 		case ArgTypeService:
@@ -274,6 +321,9 @@ func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 			})
 		}
 	}
+
+	c.logger.V(loggerDebugVerbosity).
+		Info("parameters for provider of services parsed successfully", "name", def.ref.String())
 
 	return parsedArgs, nil
 }

@@ -112,7 +112,7 @@ func BuildContainer() error {
 			),
 	)
 
-	return i.Build(context.Background()) //nolint:wrapcheck
+	return i.Build() //nolint:wrapcheck
 }
 
 func TestGetContainer(t *testing.T) {
