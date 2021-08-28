@@ -1,6 +1,6 @@
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
-# github.com/dtomasi/fakr v0.0.2
+# github.com/dtomasi/fakr v0.0.3
 ## explicit
 github.com/dtomasi/fakr
 # github.com/go-logr/logr v1.1.0
