@@ -12,6 +12,8 @@
 
 ## Usage example
 
+See also /examples directory
+
 ```go
 package main
 
