@@ -3,6 +3,7 @@ package di_test
 import (
 	"context"
 	"github.com/dtomasi/di"
+	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
@@ -59,12 +60,13 @@ func (ti *TestService1) TestString() string {
 
 type TestService2 struct {
 	testService1 TestInterface
+	logger       logr.Logger
 	isTrue       bool
 	testString   string
 }
 
-func NewTestService2(service1 TestInterface, isTrue bool, testString string) *TestService2 {
-	return &TestService2{testService1: service1, isTrue: isTrue, testString: testString}
+func NewTestService2(service1 TestInterface, logger logr.Logger, isTrue bool, testString string) *TestService2 {
+	return &TestService2{testService1: service1, logger: logger, isTrue: isTrue, testString: testString}
 }
 
 func (ti *TestService2) True() bool {
@@ -77,6 +79,10 @@ func (ti *TestService2) TestString() string {
 
 func (ti *TestService2) TestService1() TestInterface {
 	return ti.testService1
+}
+
+func (ti *TestService2) Logger() logr.Logger {
+	return ti.logger
 }
 
 type ParameterProviderMock struct{}
@@ -107,6 +113,7 @@ func BuildContainer() error {
 			Provider(NewTestService2).
 			Args(
 				di.ServiceArg(di.StringRef("TestService1")),
+				di.LoggerArg(),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
 			),
@@ -141,6 +148,7 @@ func TestContainer_Build(t *testing.T) {
 	t2 := ci.MustGet(di.StringRef("TestService2")).(*TestService2) //nolint:forcetypeassert
 	assert.IsType(t, &TestService2{}, t2)                          //nolint:exhaustivestruct
 	assert.Implements(t, (*TestInterface)(nil), t2)
+	assert.IsType(t, logr.Logger{}, t2.Logger())
 	assert.True(t, t2.True())
 	assert.Equal(t, "foo", t2.TestString())
 	assert.IsType(t, &TestService1{}, t2.TestService1()) //nolint:exhaustivestruct

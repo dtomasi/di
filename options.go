@@ -26,6 +26,6 @@ func WithParameterProvider(pp ParameterProvider) Option {
 // For details see: https://github.com/go-logr/logr#a-minimal-logging-api-for-go
 func WithLogrImpl(li logr.Logger) Option {
 	return func(c *Container) {
-		c.logger = li
+		c.originalLogger = li
 	}
 }

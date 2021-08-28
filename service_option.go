@@ -1,24 +1,20 @@
 package di
 
-import (
-	"github.com/mcuadros/go-defaults"
-)
-
 // ServiceOption defines an option function.
 type ServiceOption func(so *serviceOptions)
 
 // serviceDefOptions lifecycle options for definition.
 type serviceOptions struct {
-	buildOnFirstRequest bool `default:"false"`
-	alwaysRebuild       bool `default:"false"`
+	buildOnFirstRequest bool
+	alwaysRebuild       bool
 }
 
 // newServiceOptions returns a serviceOptions instance with defaults.
 func newServiceOptions() *serviceOptions {
-	so := new(serviceOptions)
-	defaults.SetDefaults(so)
-
-	return so
+	return &serviceOptions{
+		buildOnFirstRequest: false,
+		alwaysRebuild:       false,
+	}
 }
 
 // BuildOnFirstRequest option will not create an instance from on building the container.

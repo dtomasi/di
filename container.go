@@ -21,7 +21,8 @@ var (
 	defaultContainerOptsSet bool //nolint:gochecknoglobals
 
 	loggerName           = "di" //nolint:gochecknoglobals
-	loggerDebugVerbosity = 6    //nolint:gochecknoglobals
+	loggerVerbosityDebug = 6    //nolint:gochecknoglobals
+	loggerVerbosityError = 1    //nolint:gochecknoglobals
 
 	errContainer        = errors.New("container error")
 	errBuildingService  = errors.New("service build error")
@@ -30,20 +31,20 @@ var (
 
 // Container is the actual service container struct.
 type Container struct {
-	ctx           context.Context
-	logger        logr.Logger
-	paramProvider ParameterProvider
-	serviceDefs   *serviceMap
+	ctx            context.Context
+	// originalLogger is used for injection.
+	originalLogger         logr.Logger
+	// logger is used for internal logs.
+	logger logr.Logger
+	paramProvider  ParameterProvider
+	serviceDefs    *serviceMap
 }
 
 // NewServiceContainer returns a new Container instance.
 func NewServiceContainer(opts ...Option) *Container {
-	i := &Container{
-		// create a context. This can be overridden using option WithContext().
+	i := &Container{ //nolint:exhaustivestruct
 		ctx: context.Background(),
-
-		// Init a silent logger. This can be overwritten with WithLogrImpl().
-		logger:        fakr.New(),
+		originalLogger:        fakr.New(),
 		paramProvider: &NoParameterProvider{},
 		serviceDefs:   newServiceMap(),
 	}
@@ -53,7 +54,7 @@ func NewServiceContainer(opts ...Option) *Container {
 	}
 
 	// Setup logger name
-	i.logger = i.logger.WithName(loggerName)
+	i.logger = i.originalLogger.WithName(loggerName)
 
 	return i
 }
@@ -105,6 +106,8 @@ func (c *Container) Set(ref fmt.Stringer, s interface{}) *Container {
 		tags:     []fmt.Stringer{},
 	})
 
+	c.debugLogger().Info("added a new service via Set()", "service", ref.String())
+
 	return c
 }
 
@@ -123,7 +126,7 @@ func (c *Container) Get(ref fmt.Stringer) (interface{}, error) {
 		return sd.instance, nil
 	}
 
-	return nil, newError(errContainer, fmt.Sprintf("service %s not found", ref))
+	return nil, c.createAndLogError(errContainer, fmt.Errorf("service %s not found", ref).Error()) // nolint:goerr113
 }
 
 // MustGet returns a service instance or panics on error.
@@ -156,7 +159,7 @@ func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
 	})
 
 	if err != nil {
-		return nil, newError(errContainer, err)
+		return nil, c.createAndLogError(errContainer, err)
 	}
 
 	return instances, nil
@@ -164,14 +167,14 @@ func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
 
 // Build will build the service container.
 func (c *Container) Build() error {
-	c.logger.V(loggerDebugVerbosity).Info("starting container build")
+	c.debugLogger().Info("starting container build")
 
 	err := c.serviceDefs.Range(func(key fmt.Stringer, serviceDef *ServiceDef) error {
-		c.logger.V(loggerDebugVerbosity).Info("building services", "name", key.String())
+		c.debugLogger().Info("building services", "name", key.String())
 
 		// skip lazy initializing services here
 		if serviceDef.options.buildOnFirstRequest || serviceDef.options.alwaysRebuild {
-			c.logger.V(loggerDebugVerbosity).
+			c.debugLogger().
 				Info("skipping service because its set to lazy or should be rebuilt on each request",
 					"name", key.String())
 
@@ -194,10 +197,10 @@ func (c *Container) Build() error {
 	if err != nil {
 		c.logger.V(1).Error(err, "container build failed")
 
-		return newError(errBuildingService, err)
+		return c.createAndLogError(errBuildingService, err)
 	}
 
-	c.logger.V(loggerDebugVerbosity).Info("container built successfully")
+	c.debugLogger().Info("container built successfully")
 
 	return nil
 }
@@ -213,7 +216,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 		x := reflect.TypeOf(def.provider)
 
 		if x.Kind() != reflect.Func {
-			return nil, newError(
+			return nil, c.createAndLogError(
 				errBuildingService,
 				fmt.Sprintf("provider defined for service definition %s is not a function", def.ref),
 			)
@@ -221,7 +224,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 
 		inputArgCount := x.NumIn()
 		if inputArgCount != len(parsedArgs) {
-			return nil, newError(errBuildingService, fmt.Sprintf(
+			return nil, c.createAndLogError(errBuildingService, fmt.Sprintf(
 				"expected %d arguments for %s provider. Got %d",
 				inputArgCount,
 				def.ref,
@@ -236,7 +239,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 
 			inArgType := reflect.TypeOf(parsedArgs[i].value)
 			if getType(inType) != getType(inArgType) && !inArgType.Implements(inType) {
-				return nil, newError(errBuildingService, fmt.Sprintf(
+				return nil, c.createAndLogError(errBuildingService, fmt.Sprintf(
 					"provider argument at position %d should be type of or implementing %s. Got %s",
 					i,
 					getType(inType),
@@ -262,14 +265,14 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 			return returnValues[0].Interface(), providerErr
 
 		default:
-			return nil, newError(
+			return nil, c.createAndLogError(
 				errBuildingService,
 				fmt.Sprintf("to many return values in provider function for services %s", def.ref),
 			)
 		}
 	}
 
-	return nil, newError(errBuildingService, fmt.Sprintf("no provider function set for service %s", def.ref))
+	return nil, c.createAndLogError(errBuildingService, fmt.Sprintf("no provider function set for service %s", def.ref))
 }
 
 // parseParameters parses the arguments and assigns values by arg type.
@@ -278,14 +281,14 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 	var parsedArgs []Arg
 
-	c.logger.V(loggerDebugVerbosity).Info("parsing parameters for provider of services", "name", def.ref.String())
+	c.debugLogger().Info("parsing parameters for provider of services", "name", def.ref.String())
 
 	for _, v := range def.args {
 		switch v._type {
 		case ArgTypeService:
 			s, err := c.Get(v.value.(fmt.Stringer))
 			if err != nil {
-				return nil, newError(errParameterParsing, err)
+				return nil, c.createAndLogError(errParameterParsing, err)
 			}
 
 			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
@@ -294,7 +297,7 @@ func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
-				return nil, newError(errParameterParsing, err)
+				return nil, c.createAndLogError(errParameterParsing, err)
 			}
 
 			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
@@ -310,6 +313,11 @@ func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
 				value: c.ctx,
 			})
+		case ArgTypeLogger:
+			// Push the logger
+			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
+				value: c.logger,
+			})
 		case ArgTypeContainer:
 			// Push the container itself
 			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
@@ -323,8 +331,25 @@ func (c *Container) parseParameters(def *ServiceDef) ([]Arg, error) {
 		}
 	}
 
-	c.logger.V(loggerDebugVerbosity).
+	c.debugLogger().
 		Info("parameters for provider of services parsed successfully", "name", def.ref.String())
 
 	return parsedArgs, nil
+}
+
+// debugLogger returns the logger with debug verbosity.
+func (c *Container) debugLogger() logr.Logger {
+	return c.logger.V(loggerVerbosityDebug)
+}
+
+// createAndLogError logs and creates a new error that is returned.
+func (c *Container) createAndLogError(errType error, msgOrErr interface{}) error { // Wrap string in error
+	msgOrErr, ok := msgOrErr.(error)
+	if !ok {
+		msgOrErr = fmt.Errorf(msgOrErr.(string)) // nolint:goerr113
+	}
+
+	c.logger.V(loggerVerbosityError).Error(errType, msgOrErr.(error).Error())
+
+	return fmt.Errorf("%w: %v", errType, msgOrErr)
 }

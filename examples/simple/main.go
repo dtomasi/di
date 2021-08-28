@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+// SalutationParameterProvider provides us the salutations as parameter.
+// This provider implements the di.ParameterProvider interface.
+// As di provides this simple interface it should be relatively easy to implement providers for
+// viper (github.com/spf13/viper) or koanf (github.com/knadh/koanf) or whatever you like to.
 type SalutationParameterProvider struct {
 	data map[string]interface{}
 }
@@ -37,6 +41,19 @@ func (p *SalutationParameterProvider) Set(key string, value interface{}) error {
 	return nil
 }
 
+/*
+Steps:
+- create a context to provide it to di
+- initialize a new di container
+	- pass the context
+	- add a logr interface logger for debugging
+	- add our salutation prarameter provider
+- register our services
+- build the container
+- request services and print greeting depending on daytime
+
+example output can be found in output.txt
+ */
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -58,7 +75,9 @@ func main() {
 
 	// Create container
 	c := di.NewServiceContainer(
+		// Pass the context
 		di.WithContext(ctx),
+		// Add a debug logger
 		di.WithLogrImpl(funcr.New(
 			func(pfx, args string) { fmt.Println(pfx, args) }, //nolint:forbidigo
 			funcr.Options{
@@ -67,6 +86,7 @@ func main() {
 				Verbosity:    6, //nolint:gomnd
 			}),
 		),
+		// Pass our parameter provider
 		di.WithParameterProvider(NewMyParameterProvider()),
 	)
 

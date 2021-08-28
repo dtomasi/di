@@ -11,6 +11,7 @@ const (
 	ArgTypeContext
 	ArgTypeContainer
 	ArgTypeParamProvider
+	ArgTypeLogger
 	ArgTypeService
 	ArgTypeParam
 )
@@ -52,6 +53,11 @@ func ContextArg() Arg {
 // ContainerArg is a shortcut for an argument with no value that injects the container itself.
 func ContainerArg() Arg {
 	return ArgWithType(ArgTypeContainer, nil)
+}
+
+// LoggerArg is a shortcut for an argument with no value that injects the logger provided with the container.
+func LoggerArg() Arg {
+	return ArgWithType(ArgTypeLogger, nil)
 }
 
 // ParamProviderArg is a shortcut for an argument with no value that injects the container´s parameter provider.
