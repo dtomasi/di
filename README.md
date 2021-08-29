@@ -5,7 +5,7 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dtomasi/di/main.svg)](https://results.pre-commit.ci/latest/github/dtomasi/di/main)
 ![Go Unit Tests](https://github.com/dtomasi/di/actions/workflows/build.yml/badge.svg)
 ![CodeQL](https://github.com/dtomasi/di/actions/workflows/codeql-analysis.yml/badge.svg)
-
+[![codecov](https://codecov.io/gh/dtomasi/di/branch/main/graph/badge.svg?token=FBN5OAX4IK)](https://codecov.io/gh/dtomasi/di)
 
 ## Installation
 
