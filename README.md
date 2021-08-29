@@ -23,10 +23,10 @@ import (
 	"github.com/dtomasi/di"
 )
 
-func BuildContainer() error {
-	i := di.DefaultContainer()
+func BuildContainer() (*di.Container, error) {
+	container := di.NewServiceContainer()
 
-	i.Register(
+	container.Register(
 		// Services are registered using fmt.Stringer interface.
 		// Using this interface enables DI to use strings as well as
 		// integers or even pointers as map keys.
@@ -54,17 +54,21 @@ func BuildContainer() error {
 	)
 
 	// Builds all services
-	return i.Build() //nolint:wrapcheck
+	if err := container.Build(); err != nil {
+		return nil, err // nolint:wrapcheck
+	}
+
+	return container, nil
 }
 
 func main() {
 
-    err := BuildContainer()
+	container, err := BuildContainer()
     if err != nil {
     	panic(err)
     }
 
-    testService := di.DefaultContainer().MustGet(di.StringRef("TestService1"))
+    testService := container.MustGet(di.StringRef("TestService1"))
 }
 
 ```
