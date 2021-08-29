@@ -7,7 +7,10 @@ import (
 
 func TestNewServiceDef(t *testing.T) {
 	sd := di.NewServiceDef(di.StringRef("foo")).
-		Opts().
+		Opts(
+			di.BuildOnFirstRequest(),
+			di.BuildAlwaysRebuild(),
+			).
 		Provider(func() {}).
 		Args(
 			di.ContextArg(),
@@ -16,7 +19,7 @@ func TestNewServiceDef(t *testing.T) {
 			di.InterfaceArg(""),
 			di.ServiceArg(di.StringRef("bar")),
 			di.ParamArg(""),
-		)
+		).AddTag(di.StringRef("foo"))
 
 	if sd == nil {
 		t.Error("NewServiceDef returns nil value")

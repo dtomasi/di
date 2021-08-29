@@ -3,6 +3,7 @@ package di_test
 import (
 	"context"
 	"github.com/dtomasi/di"
+	"github.com/dtomasi/fakr"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -96,7 +97,9 @@ func (m *ParameterProviderMock) Set(_ string, _ interface{}) error {
 
 func BuildContainer() (*di.Container, error) {
 	container := di.NewServiceContainer(
+		di.WithContext(context.Background()),
 		di.WithParameterProvider(&ParameterProviderMock{}),
+		di.WithLogrImpl(fakr.New()),
 	)
 
 	container.Register(

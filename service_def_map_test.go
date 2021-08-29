@@ -1,6 +1,7 @@
 package di_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dtomasi/di"
 	"github.com/stretchr/testify/assert"
@@ -37,4 +38,18 @@ func TestServiceDefMap_All(t *testing.T) {
 	assert.Equal(t, 1, m.Count())
 	m.Clear()
 	assert.Equal(t, 0, m.Count())
+}
+
+func TestServiceDefMap_Range_Error(t *testing.T) {
+	key := di.StringRef("foo")
+	def := di.NewServiceDef(key)
+	m := di.NewServiceDefMap()
+
+	m.Store(key, def)
+
+	err := m.Range(func(_ fmt.Stringer, _ *di.ServiceDef) error {
+		return errors.New("something happened") // nolint:goerr113
+	})
+
+	assert.Error(t, err)
 }
