@@ -4,15 +4,6 @@ import (
 	"fmt"
 )
 
-// StringRef defines a service reference as string.
-// As ServiceDef implements fmt.Stringer as an interface for referencing services.
-type StringRef string
-
-// String implements fmt.Stringer interface method.
-func (r StringRef) String() string {
-	return string(r)
-}
-
 // ServiceDef is a definition of a service
 // it describes how a service should be created and handled inside the
 // service container.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dtomasi/di/internal/utils"
 	"github.com/dtomasi/fakr"
 	"github.com/go-logr/logr"
 	"reflect"
@@ -15,11 +16,6 @@ const (
 )
 
 var (
-	// Container is a singleton/global instance.
-	defaultContainer *Container //nolint:gochecknoglobals
-	// To avoid recreation of default container.
-	defaultContainerOptsSet bool //nolint:gochecknoglobals
-
 	loggerName           = "di" //nolint:gochecknoglobals
 	loggerVerbosityDebug = 6    //nolint:gochecknoglobals
 	loggerVerbosityError = 1    //nolint:gochecknoglobals
@@ -37,7 +33,7 @@ type Container struct {
 	// logger is used for internal logs.
 	logger        logr.Logger
 	paramProvider ParameterProvider
-	serviceDefs   *serviceMap
+	serviceDefs   *ServiceDefMap
 }
 
 // NewServiceContainer returns a new Container instance.
@@ -46,7 +42,7 @@ func NewServiceContainer(opts ...Option) *Container {
 		ctx:            context.Background(),
 		originalLogger: fakr.New(),
 		paramProvider:  &NoParameterProvider{},
-		serviceDefs:    newServiceMap(),
+		serviceDefs:    NewServiceDefMap(),
 	}
 
 	for _, opt := range opts {
@@ -57,38 +53,6 @@ func NewServiceContainer(opts ...Option) *Container {
 	i.logger = i.originalLogger.WithName(loggerName)
 
 	return i
-}
-
-// DefaultContainer returns the default Container instance.
-func DefaultContainer() *Container {
-	if defaultContainer == nil {
-		defaultContainer = NewServiceContainer()
-	}
-
-	return defaultContainer
-}
-
-// Opts allows to configure/recreate the default container
-// NOTE: this panics if it is called more than once.
-func Opts(opts ...Option) *Container {
-	if defaultContainerOptsSet {
-		panic("detected multiple calls to Opts on default container")
-	}
-
-	defaultContainer = NewServiceContainer(opts...)
-	defaultContainerOptsSet = true
-
-	return defaultContainer
-}
-
-// SetParameterProvider allows to define a provider for fetching parameters using dot.notation.
-func (c *Container) SetParameterProvider(provider ParameterProvider) {
-	c.paramProvider = provider
-}
-
-// GetParameterProvider returns the set parameter provider.
-func (c *Container) GetParameterProvider() ParameterProvider {
-	return c.paramProvider
 }
 
 // Register lets you register a new ServiceDef to the container.
@@ -185,9 +149,9 @@ func (c *Container) Build() error {
 		// this will trigger build if definition instance is nil.
 		_, err := c.Get(key)
 		if err != nil {
-			c.logger.V(1).Error(err, "creation of service failed", "name", key.String())
+			c.logger.V(loggerVerbosityError).Error(err, "creation of service failed", "name", key.String())
 
-			return err
+			return c.createAndLogError(errBuildingService, err)
 		}
 
 		// return true as we want to get all build errors as an output here.
@@ -195,7 +159,7 @@ func (c *Container) Build() error {
 	})
 
 	if err != nil {
-		c.logger.V(1).Error(err, "container build failed")
+		c.logger.V(loggerVerbosityError).Error(err, "container build failed")
 
 		return c.createAndLogError(errBuildingService, err)
 	}
@@ -238,12 +202,15 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (interface{}, error) {
 			inType := x.In(i)
 
 			inArgType := reflect.TypeOf(parsedArgs[i].value)
-			if getType(inType) != getType(inArgType) && !inArgType.Implements(inType) {
+			inTypeString := utils.GetType(inType)
+			inArgTypeString := utils.GetType(inArgType)
+
+			if inTypeString != inArgTypeString && !inArgType.Implements(inType) {
 				return nil, c.createAndLogError(errBuildingService, fmt.Sprintf(
 					"provider argument at position %d should be type of or implementing %s. Got %s",
 					i,
-					getType(inType),
-					getType(inArgType),
+					inTypeString,
+					inArgTypeString,
 				))
 			}
 

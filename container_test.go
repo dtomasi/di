@@ -94,11 +94,12 @@ func (m *ParameterProviderMock) Set(_ string, _ interface{}) error {
 	return nil
 }
 
-func BuildContainer() error {
-	i := di.DefaultContainer()
-	i.SetParameterProvider(&ParameterProviderMock{})
+func BuildContainer() (*di.Container, error) {
+	container := di.NewServiceContainer(
+		di.WithParameterProvider(&ParameterProviderMock{}),
+	)
 
-	i.Register(
+	container.Register(
 		di.NewServiceDef(di.StringRef("TestService1")).
 			Provider(NewTestService1).
 			Args(
@@ -119,24 +120,26 @@ func BuildContainer() error {
 			),
 	)
 
-	return i.Build() //nolint:wrapcheck
+	if err := container.Build(); err != nil {
+		return nil, err // nolint:wrapcheck
+	}
+
+	return container, nil
 }
 
 func TestGetContainer(t *testing.T) {
-	if di.DefaultContainer() == nil {
+	if di.NewServiceContainer() == nil {
 		t.Error("DefaultContainer returns nil value")
 	}
 }
 
 func TestContainer_Build(t *testing.T) {
-	err := BuildContainer() //nolint:ifshort
+	container, err := BuildContainer()
 	if err != nil {
 		t.Error(err)
 	}
 
-	ci := di.DefaultContainer()
-
-	t1 := ci.MustGet(di.StringRef("TestService1")).(*TestService1) //nolint:forcetypeassert
+	t1 := container.MustGet(di.StringRef("TestService1")).(*TestService1) //nolint:forcetypeassert
 
 	assert.IsType(t, &TestService1{}, t1) //nolint:exhaustivestruct
 	assert.Implements(t, (*context.Context)(nil), t1.Context())
@@ -145,8 +148,8 @@ func TestContainer_Build(t *testing.T) {
 	assert.True(t, t1.True())
 	assert.Equal(t, "foo", t1.TestString())
 
-	t2 := ci.MustGet(di.StringRef("TestService2")).(*TestService2) //nolint:forcetypeassert
-	assert.IsType(t, &TestService2{}, t2)                          //nolint:exhaustivestruct
+	t2 := container.MustGet(di.StringRef("TestService2")).(*TestService2) //nolint:forcetypeassert
+	assert.IsType(t, &TestService2{}, t2)                                 //nolint:exhaustivestruct
 	assert.Implements(t, (*TestInterface)(nil), t2)
 	assert.IsType(t, logr.Logger{}, t2.Logger())
 	assert.True(t, t2.True())
@@ -155,17 +158,15 @@ func TestContainer_Build(t *testing.T) {
 }
 
 func TestContainer_Build_ConcurrentRead(t *testing.T) {
-	err := BuildContainer() //nolint:ifshort
+	container, err := BuildContainer()
 	if err != nil {
 		t.Error(err)
 	}
 
 	for i := 0; i < 10; i++ {
 		go func() {
-			ci := di.DefaultContainer()
-
 			for j := 0; j < 10; j++ {
-				_, err := ci.Get(di.StringRef("TestService1"))
+				_, err := container.Get(di.StringRef("TestService1"))
 				if err != nil {
 					t.Error(err)
 				}

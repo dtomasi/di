@@ -39,17 +39,17 @@ func ExampleNewServiceDef() {
 		)
 
 	// Getting the default (global) container instance for demo purpose
-	defaultContainer := di.DefaultContainer()
+	container := di.NewServiceContainer()
 
 	// Register the definition
-	defaultContainer.Register(def)
+	container.Register(def)
 
 	// Build the service container (nothing is built in our case, because of the options above)
-	if err := defaultContainer.Build(); err != nil {
+	if err := container.Build(); err != nil {
 		panic(err)
 	}
 
 	// Get the service and greet John
-	greeterService := defaultContainer.MustGet(di.StringRef("my_greeter_service_name")).(*greeter.Greeter) // nolint
+	greeterService := container.MustGet(di.StringRef("my_greeter_service_name")).(*greeter.Greeter) // nolint
 	greeterService.Greet("John")
 }
