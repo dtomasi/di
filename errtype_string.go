@@ -12,14 +12,15 @@ func _() {
 	_ = x[ErrProviderMissing-1]
 	_ = x[ErrProviderNotAFunc-2]
 	_ = x[ErrParamProviderGet-3]
-	_ = x[ErrProviderToManyReturnValues-4]
-	_ = x[ErrProviderArgCountMismatch-5]
-	_ = x[ErrProviderArgTypeMismatch-6]
+	_ = x[ErrParamProviderNotDefined-4]
+	_ = x[ErrProviderToManyReturnValues-5]
+	_ = x[ErrProviderArgCountMismatch-6]
+	_ = x[ErrProviderArgTypeMismatch-7]
 }
 
-const _ErrType_name = "ErrServiceNotFoundErrProviderMissingErrProviderNotAFuncErrParamProviderGetErrProviderToManyReturnValuesErrProviderArgCountMismatchErrProviderArgTypeMismatch"
+const _ErrType_name = "ErrServiceNotFoundErrProviderMissingErrProviderNotAFuncErrParamProviderGetErrParamProviderNotDefinedErrProviderToManyReturnValuesErrProviderArgCountMismatchErrProviderArgTypeMismatch"
 
-var _ErrType_index = [...]uint8{0, 18, 36, 55, 74, 103, 130, 156}
+var _ErrType_index = [...]uint8{0, 18, 36, 55, 74, 100, 129, 156, 182}
 
 func (i ErrType) String() string {
 	if i < 0 || i >= ErrType(len(_ErrType_index)-1) {

@@ -10,6 +10,7 @@ const (
 	ErrProviderMissing
 	ErrProviderNotAFunc
 	ErrParamProviderGet
+	ErrParamProviderNotDefined
 	ErrProviderToManyReturnValues
 	ErrProviderArgCountMismatch
 	ErrProviderArgTypeMismatch
