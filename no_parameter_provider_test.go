@@ -2,27 +2,19 @@ package di_test
 
 import (
 	"github.com/dtomasi/di"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestNoParameterProvider_Get(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-
 	pp := &di.NoParameterProvider{}
-	_,_ = pp.Get("foo")
+	v,err := pp.Get("foo")
+	assert.Nil(t, v)
+	assert.NoError(t, err)
 }
 
 func TestNoParameterProvider_Set(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-
 	pp := &di.NoParameterProvider{}
-	_ = pp.Set("foo", "")
+	err := pp.Set("foo", "")
+	assert.NoError(t, err)
 }
