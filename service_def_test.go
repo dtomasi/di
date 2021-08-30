@@ -10,7 +10,7 @@ func TestNewServiceDef(t *testing.T) {
 		Opts(
 			di.BuildOnFirstRequest(),
 			di.BuildAlwaysRebuild(),
-			).
+		).
 		Provider(func() {}).
 		Args(
 			di.ContextArg(),

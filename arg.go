@@ -2,6 +2,8 @@ package di
 
 import "fmt"
 
+//go:generate stringer -type=ArgType
+
 // ArgType defines the type of argument.
 // Currently, those are service or param (parameter from service container).
 type ArgType int

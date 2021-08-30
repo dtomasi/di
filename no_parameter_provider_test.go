@@ -8,7 +8,7 @@ import (
 
 func TestNoParameterProvider_Get(t *testing.T) {
 	pp := &di.NoParameterProvider{}
-	v,err := pp.Get("foo")
+	v, err := pp.Get("foo")
 	assert.Nil(t, v)
 	assert.NoError(t, err)
 }
