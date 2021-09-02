@@ -83,7 +83,7 @@ func (c *Container) Get(ref fmt.Stringer) (service interface{}, err error) {
 		return sd.instance, nil
 	}
 
-	return nil, errors.NewStringerErr(ErrServiceNotFound) //nolint:wrapcheck
+	return nil, errors.NewStringerErr(ErrServiceNotFound)
 }
 
 // MustGet returns a service instance or panics on error.
@@ -175,12 +175,12 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 		x := reflect.TypeOf(def.provider)
 
 		if x.Kind() != reflect.Func {
-			return nil, errors.NewStringerErr(ErrProviderNotAFunc) //nolint:wrapcheck
+			return nil, errors.NewStringerErr(ErrProviderNotAFunc)
 		}
 
 		inputArgCount := x.NumIn()
 		if inputArgCount != len(parsedArgs) {
-			return nil, errors.WrapErrStringer( //nolint:wrapcheck
+			return nil, errors.WrapErrStringer(
 				errors.NewErrf("expected %d got %d",
 					inputArgCount,
 					len(parsedArgs),
@@ -200,7 +200,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 
 			if inTypeString != inArgTypeString && !inArgType.Implements(inType) {
 				return nil,
-					errors.WrapErrStringer( //nolint:wrapcheck
+					errors.WrapErrStringer(
 						errors.NewErrf("expected %s got %s",
 							inTypeString,
 							inArgTypeString,
@@ -227,11 +227,11 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 			return returnValues[0].Interface(), providerErr
 
 		default:
-			return nil, errors.NewStringerErr(ErrProviderToManyReturnValues) //nolint:wrapcheck
+			return nil, errors.NewStringerErr(ErrProviderToManyReturnValues)
 		}
 	}
 
-	return nil, errors.NewStringerErr(ErrProviderMissing) //nolint:wrapcheck
+	return nil, errors.NewStringerErr(ErrProviderMissing)
 }
 
 // parseArgs parses the arguments and assigns values by arg type.
@@ -247,7 +247,7 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeService:
 			s, err := c.Get(v.value.(fmt.Stringer))
 			if err != nil {
-				return nil, errors.WrapErrStringer( //nolint:wrapcheck
+				return nil, errors.WrapErrStringer(
 					errors.NewErrf("service: %s", v.value),
 					ErrServiceNotFound,
 				)
@@ -259,7 +259,7 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
-				return nil, errors.WrapErrStringer( //nolint:wrapcheck
+				return nil, errors.WrapErrStringer(
 					errors.NewErrf("key: %s", v.value),
 					ErrParamProviderGet,
 				)

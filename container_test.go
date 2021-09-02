@@ -124,7 +124,7 @@ func BuildContainer() (*di.Container, error) {
 	)
 
 	if err := container.Build(); err != nil {
-		return nil, err // nolint:wrapcheck
+		return nil, err
 	}
 
 	return container, nil
