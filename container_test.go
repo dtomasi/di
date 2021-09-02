@@ -181,3 +181,12 @@ func TestContainer_Build_ConcurrentRead(t *testing.T) {
 		}()
 	}
 }
+
+func TestContainer_Set(t *testing.T) {
+	container := di.NewServiceContainer()
+	container.Set(di.StringRef("foo"), &TestService1{}) // nolint:exhaustivestruct
+
+	instance, err := container.Get(di.StringRef("foo"))
+	assert.NoError(t, err)
+	assert.IsType(t, &TestService1{}, instance) // nolint:exhaustivestruct
+}
