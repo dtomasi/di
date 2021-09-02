@@ -9,6 +9,7 @@ repos:
     rev: feature/add-go-generate
     hooks:
       - id: go-generate
+        default_stages: [commit]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
