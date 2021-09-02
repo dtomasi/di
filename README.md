@@ -20,11 +20,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/dtomasi/di"
+	"log"
 )
 
 func BuildContainer() (*di.Container, error) {
-	container := di.NewServiceContainer()
+	container := di.NewServiceContainer(
+		// With given context
+		// di.WithContext(...)
+
+		// With a logger that implements logr interface
+		// di.WithLogrImpl(...)
+
+		// With a parameter provider. Something like viper or koanf ...
+		// di.WithParameterProvider(...)
+	)
 
 	container.Register(
 		// Services are registered using fmt.Stringer interface.
@@ -32,7 +43,7 @@ func BuildContainer() (*di.Container, error) {
 		// integers or even pointers as map keys.
 		di.NewServiceDef(di.StringRef("TestService1")).
 			// A provider function
-			Provider(func() (interface{}, error) { return nil, nil}).
+			Provider(func() (interface{}, error) { return nil, nil }).
 			// Indicated "lazy" creation of services
 			Opts(di.BuildOnFirstRequest()).
 			Args(
@@ -64,11 +75,11 @@ func BuildContainer() (*di.Container, error) {
 func main() {
 
 	container, err := BuildContainer()
-    if err != nil {
-    	panic(err)
-    }
+	if err != nil {
+        panic(err)
+	}
 
-    testService := container.MustGet(di.StringRef("TestService1"))
+	testService := container.MustGet(di.StringRef("TestService1"))
 }
 
 ```
