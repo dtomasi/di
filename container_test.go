@@ -120,7 +120,8 @@ func BuildContainer() (*di.Container, error) {
 				di.LoggerArg(),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
-			),
+			).
+			AddTag(di.StringRef("test")),
 	)
 
 	if err := container.Build(); err != nil {
@@ -189,4 +190,16 @@ func TestContainer_Set(t *testing.T) {
 	instance, err := container.Get(di.StringRef("foo"))
 	assert.NoError(t, err)
 	assert.IsType(t, &TestService1{}, instance) // nolint:exhaustivestruct
+}
+
+func TestContainer_FindByTag(t *testing.T) {
+	container, err := BuildContainer()
+	if err != nil {
+		t.Error(err)
+	}
+
+	instances, err := container.FindByTag(di.StringRef("test"))
+	assert.NoError(t, err)
+	assert.Len(t, instances, 1)
+	assert.IsType(t, &TestService2{}, instances[0]) // nolint:exhaustivestruct
 }
