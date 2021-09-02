@@ -9,9 +9,9 @@ const (
 	ErrServiceNotFound ErrType = iota
 	ErrProviderMissing
 	ErrProviderNotAFunc
-	ErrParamProviderGet
-	ErrParamProviderNotDefined
 	ErrProviderToManyReturnValues
 	ErrProviderArgCountMismatch
 	ErrProviderArgTypeMismatch
+	ErrParamProviderGet
+	ErrParamProviderNotDefined
 )

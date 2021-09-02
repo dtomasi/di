@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	loggerName               = "di"
-	loggerVerbosityDebug     = 6
-	singleReturnValue    int = 1
-	doubleReturnValue    int = 2
+	loggerName           string = "di"
+	loggerVerbosityDebug int    = 6
+	singleReturnValue    int    = 1
+	doubleReturnValue    int    = 2
 )
 
 // Container is the actual service container struct.
@@ -69,7 +69,7 @@ func (c *Container) Set(ref fmt.Stringer, s interface{}) *Container {
 
 // Get returns a requested service.
 func (c *Container) Get(ref fmt.Stringer) (service interface{}, err error) {
-	defer errors.WrapErrf(&err, "get service %s", ref.String())
+	defer errors.WrapPtrErrf(&err, "get service -> %s", ref.String())
 
 	// s is a service object
 	if sd, ok := c.serviceDefs.Load(ref); ok {
@@ -83,7 +83,7 @@ func (c *Container) Get(ref fmt.Stringer) (service interface{}, err error) {
 		return sd.instance, nil
 	}
 
-	return nil, errors.NewStringerError(ErrServiceNotFound)
+	return nil, errors.NewStringerErr(ErrServiceNotFound) //nolint:wrapcheck
 }
 
 // MustGet returns a service instance or panics on error.
@@ -98,7 +98,7 @@ func (c *Container) MustGet(ref fmt.Stringer) interface{} {
 
 // FindByTag finds all service instances with given tag and returns them as a slice.
 func (c *Container) FindByTag(tag fmt.Stringer) (services []interface{}, err error) {
-	defer errors.WrapErrf(&err, "find service by tag %s", tag.String())
+	defer errors.WrapPtrErrf(&err, "find service by tag -> %s", tag.String())
 
 	var instances []interface{}
 
@@ -126,7 +126,7 @@ func (c *Container) FindByTag(tag fmt.Stringer) (services []interface{}, err err
 
 // Build will build the service container.
 func (c *Container) Build() (err error) {
-	defer errors.WrapErr(&err, "build container ()")
+	defer errors.WrapPtrErr(&err, "build container")
 
 	c.debugLogger().Info("starting container build")
 
@@ -163,7 +163,7 @@ func (c *Container) Build() (err error) {
 }
 
 func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{}, err error) {
-	defer errors.WrapErrf(&err, "build service %s", def.ref)
+	defer errors.WrapPtrErrf(&err, "build service ->  %s", def.ref)
 
 	parsedArgs, err := c.parseArgs(def)
 	if err != nil {
@@ -175,20 +175,17 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 		x := reflect.TypeOf(def.provider)
 
 		if x.Kind() != reflect.Func {
-			return nil, errors.NewStringerError(ErrProviderNotAFunc)
+			return nil, errors.NewStringerErr(ErrProviderNotAFunc) //nolint:wrapcheck
 		}
 
 		inputArgCount := x.NumIn()
 		if inputArgCount != len(parsedArgs) {
-			return nil, errors.NewStringerError(
-				ErrProviderArgCountMismatch,
-				errors.WithDetail(
-					fmt.Sprintf(
-						"expected: %d\nactual: %d",
-						inputArgCount,
-						len(parsedArgs),
-					),
+			return nil, errors.WrapErrStringer( //nolint:wrapcheck
+				errors.NewErrf("expected %d got %d",
+					inputArgCount,
+					len(parsedArgs),
 				),
+				ErrProviderArgCountMismatch,
 			)
 		}
 
@@ -202,16 +199,14 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 			inArgTypeString := utils.GetType(inArgType)
 
 			if inTypeString != inArgTypeString && !inArgType.Implements(inType) {
-				return nil, errors.NewStringerError(
-					ErrProviderArgTypeMismatch,
-					errors.WithDetail(
-						fmt.Sprintf(
-							"expected: %s\nactual: %s",
+				return nil,
+					errors.WrapErrStringer( //nolint:wrapcheck
+						errors.NewErrf("expected %s got %s",
 							inTypeString,
 							inArgTypeString,
 						),
-					),
-				)
+						ErrProviderArgTypeMismatch,
+					)
 			}
 
 			inputValues = append(inputValues, reflect.ValueOf(parsedArgs[i].value))
@@ -232,11 +227,11 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 			return returnValues[0].Interface(), providerErr
 
 		default:
-			return nil, errors.NewStringerError(ErrProviderToManyReturnValues)
+			return nil, errors.NewStringerErr(ErrProviderToManyReturnValues) //nolint:wrapcheck
 		}
 	}
 
-	return nil, errors.NewStringerError(ErrProviderMissing)
+	return nil, errors.NewStringerErr(ErrProviderMissing) //nolint:wrapcheck
 }
 
 // parseArgs parses the arguments and assigns values by arg type.
@@ -252,10 +247,9 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeService:
 			s, err := c.Get(v.value.(fmt.Stringer))
 			if err != nil {
-				return nil, errors.NewStringerError(
+				return nil, errors.WrapErrStringer( //nolint:wrapcheck
+					errors.NewErrf("service: %s", v.value),
 					ErrServiceNotFound,
-					errors.WithDetail(fmt.Sprintf("service: %s", v.value)),
-					errors.WithPreviousErr(err),
 				)
 			}
 
@@ -265,10 +259,9 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
-				return nil, errors.NewStringerError(
+				return nil, errors.WrapErrStringer( //nolint:wrapcheck
+					errors.NewErrf("key: %s", v.value),
 					ErrParamProviderGet,
-					errors.WithDetail(fmt.Sprintf("key: %s", v.value)),
-					errors.WithPreviousErr(err),
 				)
 			}
 

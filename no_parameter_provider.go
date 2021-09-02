@@ -1,7 +1,6 @@
 package di
 
 import (
-	"fmt"
 	"github.com/dtomasi/di/internal/errors"
 )
 
@@ -10,15 +9,15 @@ type NoParameterProvider struct{}
 
 func (p *NoParameterProvider) Get(key string) (interface{}, error) {
 	// Just return nil to not break call to Get if no parameter provider is set.
-	return nil, errors.NewStringerError(
+	return nil, errors.WrapErrStringer( //nolint:wrapcheck
+		errors.NewErrf("key %s not found", key),
 		ErrParamProviderNotDefined,
-		errors.WithDetail(fmt.Sprintf("key %s requested", key)),
 	)
 }
 func (p *NoParameterProvider) Set(key string, value interface{}) error {
 	// Same as above for the Setter here
-	return errors.NewStringerError(
+	return errors.WrapErrStringer( //nolint:wrapcheck
+		errors.NewErrf("cannot set key %s to value %v", key, value),
 		ErrParamProviderNotDefined,
-		errors.WithDetail(fmt.Sprintf("key %s value %v provided", key, value)),
 	)
 }
