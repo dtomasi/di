@@ -1,5 +1,14 @@
 exclude: ^(vendor|.idea)/
 repos:
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v2.18.0
+    hooks:
+      - id: commitizen
+        stages: [ commit-msg ]
+  - repo: https://github.com/dtomasi/pre-commit-golang
+    rev: feature/add-go-generate
+    hooks:
+      - id: go-generate
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
@@ -13,8 +22,3 @@ repos:
     rev: v1.42.0
     hooks:
       - id: golangci-lint
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.18.0
-    hooks:
-      - id: commitizen
-        stages: [commit-msg]
