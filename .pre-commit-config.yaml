@@ -6,7 +6,7 @@ repos:
       - id: commitizen
         stages: [ commit-msg ]
   - repo: https://github.com/dtomasi/pre-commit-golang
-    rev: 0d2e43f4270a3d2bfff7636581c36f510f5044a0
+    rev: master
     hooks:
       - id: go-install
         args:
