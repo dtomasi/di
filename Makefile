@@ -1,7 +1,12 @@
+SHELL := /bin/bash
 
-setup: install-pre-commit-hooks
-	go get -u -a golang.org/x/tools/cmd/stringer
-	go mod tidy
+setup_ci: install-stringer
+
+setup: install-stringer install-pre-commit-hooks
+	go mod vendor
+
+install-stringer:
+	@type stringer >/dev/null 2>&1 || go install golang.org/x/tools/cmd/stringer@latest
 
 install-pre-commit-hooks:
 	pre-commit install --install-hooks
