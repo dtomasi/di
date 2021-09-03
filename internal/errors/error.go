@@ -51,5 +51,10 @@ func NewStringerErr(s fmt.Stringer) error {
 
 // NewErrf creates a new error from a format string and arguments.
 func NewErrf(format string, args ...interface{}) error {
-	return fmt.Errorf(format, args...) //nolint
+	return fmt.Errorf(format, args...) // nolint:goerr113
+}
+
+// New returns a new error from go builtin errors package.
+func New(msg string) error {
+	return errors.New(msg) // nolint:goerr113
 }
