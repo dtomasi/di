@@ -2,8 +2,10 @@ package di_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/dtomasi/di"
 	"github.com/dtomasi/fakr"
+	eventbus "github.com/dtomasi/go-event-bus/v2"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -96,10 +98,17 @@ func (m *ParameterProviderMock) Set(_ string, _ interface{}) error {
 }
 
 func BuildContainer() (*di.Container, error) {
+	eb := eventbus.NewEventBus()
+
+	eb.SubscribeCallback(di.EventTopicDIReady.String(), func(topic string, data interface{}) {
+		fmt.Println("container ready") //nolint:forbidigo
+	})
+
 	container := di.NewServiceContainer(
 		di.WithContext(context.Background()),
 		di.WithParameterProvider(&ParameterProviderMock{}),
 		di.WithLogrImpl(fakr.New()),
+		di.WithEventBus(eb),
 	)
 
 	container.Register(
