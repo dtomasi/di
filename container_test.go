@@ -212,3 +212,13 @@ func TestContainer_FindByTag(t *testing.T) {
 	assert.Len(t, instances, 1)
 	assert.IsType(t, &TestService2{}, instances[0]) // nolint:exhaustivestruct
 }
+
+func TestContainer_GetEventBus(t *testing.T) {
+	container, err := BuildContainer()
+	if err != nil {
+		t.Error(err)
+	}
+
+	eb := container.GetEventBus()
+	assert.IsType(t, &eventbus.EventBus{}, eb)
+}
