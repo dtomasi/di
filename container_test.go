@@ -211,6 +211,11 @@ func TestContainer_FindByTag(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, instances, 1)
 	assert.IsType(t, &TestService2{}, instances[0]) // nolint:exhaustivestruct
+
+
+	container.Register(di.NewServiceDef(di.StringRef("no-provider")).AddTag(di.StringRef("test")))
+	_, err = container.FindByTag(di.StringRef("test"))
+	assert.Error(t, err)
 }
 
 func TestContainer_GetEventBus(t *testing.T) {
@@ -221,4 +226,21 @@ func TestContainer_GetEventBus(t *testing.T) {
 
 	eb := container.GetEventBus()
 	assert.IsType(t, &eventbus.EventBus{}, eb)
+}
+
+func TestContainer_Get(t *testing.T) {
+	container, err := BuildContainer()
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = container.Get(di.StringRef("TestService1"))
+	assert.NoError(t, err)
+
+	_, err = container.Get(di.StringRef("not-exiting"))
+	assert.Error(t, err)
+
+	container.Register(di.NewServiceDef(di.StringRef("no-provider")))
+	_, err = container.Get(di.StringRef("no-provider"))
+	assert.Error(t, err)
 }
