@@ -16,3 +16,8 @@ func TestGetContainerFromContext(t *testing.T) {
 	assert.IsType(t, &di.Container{}, ctxContainer)
 	assert.Equal(t, c, ctxContainer)
 }
+
+func TestGetContainerFromContext_Error(t *testing.T) {
+	_, err := di.GetContainerFromContext(context.Background())
+	assert.Error(t, err)
+}
