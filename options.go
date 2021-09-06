@@ -2,6 +2,7 @@ package di
 
 import (
 	"context"
+	eventbus "github.com/dtomasi/go-event-bus/v2"
 	"github.com/go-logr/logr"
 )
 
@@ -27,5 +28,12 @@ func WithParameterProvider(pp ParameterProvider) Option {
 func WithLogrImpl(li logr.Logger) Option {
 	return func(c *Container) {
 		c.injectableLogger = li
+	}
+}
+
+// WithEventBus defines an eventbus.EventBus instance to use instead of an internal one.
+func WithEventBus(eb *eventbus.EventBus) Option {
+	return func(c *Container) {
+		c.eventBus = eb
 	}
 }

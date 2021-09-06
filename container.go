@@ -6,6 +6,7 @@ import (
 	"github.com/dtomasi/di/internal/errors"
 	"github.com/dtomasi/di/internal/utils"
 	"github.com/dtomasi/fakr"
+	"github.com/dtomasi/go-event-bus/v2"
 	"github.com/go-logr/logr"
 	"reflect"
 )
@@ -24,6 +25,7 @@ type Container struct {
 	injectableLogger logr.Logger
 	// logger is used for internal logs.
 	logger        logr.Logger
+	eventBus      *eventbus.EventBus
 	paramProvider ParameterProvider
 	serviceDefs   *ServiceDefMap
 }
@@ -33,6 +35,7 @@ func NewServiceContainer(opts ...Option) *Container {
 	i := &Container{ //nolint:exhaustivestruct
 		ctx:              context.Background(),
 		injectableLogger: fakr.New(),
+		eventBus:         eventbus.NewEventBus(),
 		paramProvider:    &NoParameterProvider{},
 		serviceDefs:      NewServiceDefMap(),
 	}
@@ -44,7 +47,15 @@ func NewServiceContainer(opts ...Option) *Container {
 	// Setup logger name
 	i.logger = i.injectableLogger.WithName(loggerName)
 
+	// wrap container into context
+	i.ctx = context.WithValue(i.ctx, ContextKey, i) // nolint:staticcheck
+
 	return i
+}
+
+// GetEventBus returns the eventbus instance. This is used to register to internal events that can be used as hooks.
+func (c *Container) GetEventBus() *eventbus.EventBus {
+	return c.eventBus
 }
 
 // Register lets you register a new ServiceDef to the container.
@@ -158,6 +169,7 @@ func (c *Container) Build() (err error) {
 	}
 
 	c.debugLogger().Info("container built successfully")
+	c.eventBus.Publish(EventTopicDIReady.String(), c)
 
 	return nil
 }
@@ -243,19 +255,16 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 	c.debugLogger().Info("parsing args for provider of services", "name", def.ref.String())
 
 	for _, v := range def.args {
+		var argValue interface{}
+
 		switch v._type {
 		case ArgTypeService:
 			s, err := c.Get(v.value.(fmt.Stringer))
 			if err != nil {
-				return nil, errors.WrapErrStringer(
-					errors.NewErrf("service: %s", v.value),
-					ErrServiceNotFound,
-				)
+				return nil, err
 			}
 
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: s,
-			})
+			argValue = s
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
@@ -265,35 +274,27 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 				)
 			}
 
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: val,
-			})
+			argValue = val
 		case ArgTypeInterface:
 			// Take the argument as it is
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: v.value,
-			})
+			argValue = v.value
 		case ArgTypeContext:
 			// Push the context
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: c.ctx,
-			})
+			argValue = c.ctx
 		case ArgTypeLogger:
 			// Push the logger
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: c.logger,
-			})
+			argValue = c.injectableLogger
 		case ArgTypeContainer:
 			// Push the container itself
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: c,
-			})
+			argValue = c
 		case ArgTypeParamProvider:
 			// Push the parameter provider
-			parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
-				value: c.paramProvider,
-			})
+			argValue = c.paramProvider
 		}
+
+		parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
+			value: argValue,
+		})
 	}
 
 	c.debugLogger().
