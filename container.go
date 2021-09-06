@@ -48,7 +48,7 @@ func NewServiceContainer(opts ...Option) *Container {
 	i.logger = i.injectableLogger.WithName(loggerName)
 
 	// wrap container into context
-	i.ctx = context.WithValue(i.ctx, ContextKey, i) // nolint:staticcheck
+	i.ctx = context.WithValue(i.ctx, ContextKeyContainer, i)
 
 	return i
 }
