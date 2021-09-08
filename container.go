@@ -58,6 +58,11 @@ func (c *Container) GetEventBus() *eventbus.EventBus {
 	return c.eventBus
 }
 
+// GetContext returns the context.
+func (c *Container) GetContext() context.Context {
+	return c.ctx
+}
+
 // Register lets you register a new ServiceDef to the container.
 func (c *Container) Register(defs ...*ServiceDef) {
 	for _, def := range defs {
