@@ -32,7 +32,7 @@ type Container struct {
 
 // NewServiceContainer returns a new Container instance.
 func NewServiceContainer(opts ...Option) *Container {
-	i := &Container{ //nolint:exhaustivestruct
+	c := &Container{ //nolint:exhaustivestruct
 		ctx:              context.Background(),
 		injectableLogger: fakr.New(),
 		eventBus:         eventbus.NewEventBus(),
@@ -40,17 +40,22 @@ func NewServiceContainer(opts ...Option) *Container {
 		serviceDefs:      NewServiceDefMap(),
 	}
 
+	c.SetOpts(opts...)
+
+	return c
+}
+
+// SetOpts allows setting options after container creation.
+func (c *Container) SetOpts(opts ...Option) {
 	for _, opt := range opts {
-		opt(i)
+		opt(c)
 	}
 
 	// Setup logger name
-	i.logger = i.injectableLogger.WithName(loggerName)
+	c.logger = c.injectableLogger.WithName(loggerName)
 
 	// wrap container into context
-	i.ctx = context.WithValue(i.ctx, ContextKeyContainer, i)
-
-	return i
+	c.ctx = context.WithValue(c.ctx, ContextKeyContainer, c)
 }
 
 // GetEventBus returns the eventbus instance. This is used to register to internal events that can be used as hooks.
@@ -155,6 +160,11 @@ func (c *Container) Build() (err error) {
 				Info("skipping service because its set to lazy or should be rebuilt on each request",
 					"name", key.String())
 
+			return nil
+		}
+
+		// do not rebuild existing service instances
+		if !serviceDef.options.alwaysRebuild && serviceDef.instance != nil {
 			return nil
 		}
 
