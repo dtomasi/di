@@ -259,21 +259,24 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 
 	c.debugLogger().Info("parsing args for provider of services", "name", def.ref.String())
 
-	for _, v := range def.args {
-		var argValue interface{}
+	for pos, v := range def.args {
+		var (
+			argValue interface{}
+			argErr   error
+		)
 
 		switch v._type {
 		case ArgTypeService:
 			s, err := c.Get(v.value.(fmt.Stringer))
 			if err != nil {
-				return nil, err
+				argErr = err
 			}
 
 			argValue = s
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
-				return nil, errors.WrapErrStringer(
+				argErr = errors.WrapErrStringer(
 					errors.NewErrf("key: %s", v.value),
 					ErrParamProviderGet,
 				)
@@ -289,6 +292,9 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeLogger:
 			// Push the logger
 			argValue = c.injectableLogger
+		case ArgTypeNamedLogger:
+			// Push named logger
+			argValue = c.injectableLogger.WithName(v.value.(string))
 		case ArgTypeContainer:
 			// Push the container itself
 			argValue = c
@@ -297,9 +303,27 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 			argValue = c.paramProvider
 		}
 
-		parsedArgs = append(parsedArgs, Arg{ //nolint:exhaustivestruct
+		arg := Arg{
+			_type: v._type,
 			value: argValue,
-		})
+		}
+
+		evt, ok := c.eventBus.Publish(EventTopicArgParse.String(), ArgParseEvent{
+			ServiceRef: def.ref,
+			Pos:        pos,
+			Arg:        arg,
+			Err:        argErr,
+		}).(ArgParseEvent)
+
+		if !ok {
+			return nil, errors.NewErrf("event %s must return a ArgParseEvent", EventTopicArgParse.String())
+		}
+
+		if evt.Err != nil {
+			return nil, argErr
+		}
+
+		parsedArgs = append(parsedArgs, evt.Arg)
 	}
 
 	c.debugLogger().

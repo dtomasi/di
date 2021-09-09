@@ -14,14 +14,30 @@ const (
 	ArgTypeContainer
 	ArgTypeParamProvider
 	ArgTypeLogger
+	ArgTypeNamedLogger
 	ArgTypeService
 	ArgTypeParam
 )
+
+type ArgParseEvent struct {
+	ServiceRef fmt.Stringer
+	Pos int
+	Arg Arg
+	Err error
+}
 
 // Arg defines a argument for provider functions or defined calls.
 type Arg struct {
 	_type ArgType
 	value interface{}
+}
+
+func (a Arg) GetType() ArgType {
+	return a._type
+}
+
+func (a Arg) GetValue() interface{} {
+	return a.value
 }
 
 // ArgWithType defines an argument by type, name and value.
@@ -60,6 +76,11 @@ func ContainerArg() Arg {
 // LoggerArg is a shortcut for an argument with no value that injects the logger provided with the container.
 func LoggerArg() Arg {
 	return ArgWithType(ArgTypeLogger, nil)
+}
+
+// LoggerArg is a shortcut for an argument with no value that injects the logger provided with the container.
+func NamedLoggerArg(name string) Arg {
+	return ArgWithType(ArgTypeNamedLogger, name)
 }
 
 // ParamProviderArg is a shortcut for an argument with no value that injects the container´s parameter provider.
