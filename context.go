@@ -2,7 +2,7 @@ package di
 
 import (
 	"context"
-	"github.com/dtomasi/di/internal/errors"
+	z "github.com/dtomasi/zerrors"
 )
 
 type ContextKey int
@@ -15,7 +15,7 @@ const (
 func GetContainerFromContext(ctx context.Context) (*Container, error) {
 	container, ok := ctx.Value(ContextKeyContainer).(*Container)
 	if !ok {
-		return container, errors.New("could not get container instance from context")
+		return container, z.New("could not get container instance from context")
 	}
 
 	return container, nil

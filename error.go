@@ -1,17 +1,20 @@
 package di
 
-//go:generate stringer -type=ErrType
+//go:generate stringer -type=ErrorType
 
-type ErrType int
+type ErrorType int
 
 const (
 	// Simple error codes.
-	ErrServiceNotFound ErrType = iota
-	ErrProviderMissing
-	ErrProviderNotAFunc
-	ErrProviderToManyReturnValues
-	ErrProviderArgCountMismatch
-	ErrProviderArgTypeMismatch
-	ErrParamProviderGet
-	ErrParamProviderNotDefined
+	ContainerBuildError  ErrorType = iota
+	ServiceNotFoundError
+	ServiceBuildError
+	ProviderMissingError
+	ProviderNotAFuncError
+	ProviderToManyReturnValuesError
+	ProviderArgCountMismatchError
+	ProviderArgTypeMismatchError
+	ArgParsingEventError
+	ParamProviderGetError
+	ParamProviderNotDefinedError
 )

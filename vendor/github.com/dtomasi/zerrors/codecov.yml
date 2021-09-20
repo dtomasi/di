@@ -1,0 +1,8 @@
+coverage:
+  precision: 2
+  round: up
+  range: "60...100"
+
+ignore:
+  ## No need to test functions that are just wrapped
+  - xerrors.go

@@ -1,4 +1,4 @@
-# github.com/davecgh/go-spew v1.1.0
+# github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
 # github.com/dtomasi/fakr v0.0.3
@@ -7,6 +7,9 @@ github.com/dtomasi/fakr
 # github.com/dtomasi/go-event-bus/v2 v2.3.0
 ## explicit; go 1.17
 github.com/dtomasi/go-event-bus/v2
+# github.com/dtomasi/zerrors v0.3.2
+## explicit; go 1.17
+github.com/dtomasi/zerrors
 # github.com/go-logr/logr v1.1.0
 ## explicit; go 1.16
 github.com/go-logr/logr
@@ -17,6 +20,10 @@ github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.7.0
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+## explicit; go 1.11
+golang.org/x/xerrors
+golang.org/x/xerrors/internal
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 ## explicit
 gopkg.in/yaml.v3
