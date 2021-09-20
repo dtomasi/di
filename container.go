@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dtomasi/di/internal/utils"
 	"github.com/dtomasi/fakr"
-	"github.com/dtomasi/go-event-bus/v2"
+	"github.com/dtomasi/go-event-bus/v3"
 	z "github.com/dtomasi/zerrors"
 	"github.com/go-logr/logr"
 	"reflect"

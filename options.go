@@ -2,7 +2,7 @@ package di
 
 import (
 	"context"
-	eventbus "github.com/dtomasi/go-event-bus/v2"
+	eventbus "github.com/dtomasi/go-event-bus/v3"
 	"github.com/go-logr/logr"
 )
 
