@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dtomasi/di"
 	"github.com/dtomasi/fakr"
-	eventbus "github.com/dtomasi/go-event-bus/v2"
+	eventbus "github.com/dtomasi/go-event-bus/v3"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
