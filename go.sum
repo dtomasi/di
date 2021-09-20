@@ -1,4 +1,3 @@
-github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -8,12 +7,6 @@ github.com/dtomasi/go-event-bus/v2 v2.3.0 h1:onXVsEpprhb7iDK+SxkYLIYzyj9wzZlxw/M
 github.com/dtomasi/go-event-bus/v2 v2.3.0/go.mod h1:Eshy4QQSoil8sP/QjPcYd8D1xWo5Js2XPVmRpJU+Bpw=
 github.com/dtomasi/helpers v0.1.0 h1:utFUKI/tzVz5c/U9mu3kqcYRVYNmYmMF2CU/b1yt5IU=
 github.com/dtomasi/helpers v0.1.0/go.mod h1:FP8P7JZ6LG/HIPI1aBp8+eB5VHEFiWJSAI+R1gsXlGY=
-github.com/dtomasi/zerrors v0.2.0 h1:Lpvd+m3NkXa1Tun22XoM3XZn5WogLZk8QIstFIVtpEs=
-github.com/dtomasi/zerrors v0.2.0/go.mod h1:kljMT9O00sD/ExEyK8EuvD7iNKt0Tpl04YSli46+Gvw=
-github.com/dtomasi/zerrors v0.3.0 h1:qqK0iEHkDsQ8ZBgqVHjMnw4RA1Xmx3YUtu3RrTZ0jDk=
-github.com/dtomasi/zerrors v0.3.0/go.mod h1:kljMT9O00sD/ExEyK8EuvD7iNKt0Tpl04YSli46+Gvw=
-github.com/dtomasi/zerrors v0.3.1 h1:GKQ8scEYNvJbxfwLXt8QeAkihSHlS0aI+h9c0/Ijh6A=
-github.com/dtomasi/zerrors v0.3.1/go.mod h1:kljMT9O00sD/ExEyK8EuvD7iNKt0Tpl04YSli46+Gvw=
 github.com/dtomasi/zerrors v0.3.2 h1:H+pMx5uJQEhfTiv8cNnyUwQo5ZfEDwC3JdgchyGVQI0=
 github.com/dtomasi/zerrors v0.3.2/go.mod h1:kljMT9O00sD/ExEyK8EuvD7iNKt0Tpl04YSli46+Gvw=
 github.com/go-logr/logr v1.1.0 h1:nAbevmWlS2Ic4m4+/An5NXkaGqlqpbBgdcuThZxnZyI=
