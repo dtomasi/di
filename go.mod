@@ -6,7 +6,7 @@ require (
 	github.com/dtomasi/fakr v0.0.3
 	github.com/dtomasi/go-event-bus/v3 v3.0.0
 	github.com/dtomasi/zerrors v0.3.2
-	github.com/go-logr/logr v1.1.0
+	github.com/go-logr/logr v1.2.1
 	github.com/stretchr/testify v1.7.0
 )
 
