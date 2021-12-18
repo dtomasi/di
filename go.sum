@@ -8,8 +8,9 @@ github.com/dtomasi/go-event-bus/v3 v3.0.0 h1:7kUghlS1HnRW2rDu0UY0MQoBNfpC8DdLC9L
 github.com/dtomasi/go-event-bus/v3 v3.0.0/go.mod h1:XbLoxg3xFW1TvJaxAQ7P6rWQOdXOAE+nuA+AqmD/G6Q=
 github.com/dtomasi/zerrors v0.3.2 h1:H+pMx5uJQEhfTiv8cNnyUwQo5ZfEDwC3JdgchyGVQI0=
 github.com/dtomasi/zerrors v0.3.2/go.mod h1:kljMT9O00sD/ExEyK8EuvD7iNKt0Tpl04YSli46+Gvw=
-github.com/go-logr/logr v1.1.0 h1:nAbevmWlS2Ic4m4+/An5NXkaGqlqpbBgdcuThZxnZyI=
 github.com/go-logr/logr v1.1.0/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
+github.com/go-logr/logr v1.2.2 h1:ahHml/yUpnlb96Rp8HCvtYVPY8ZYpxq3g7UYchIYwbs=
+github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e/go.mod h1:AFIo+02s+12CEg8Gzz9kzhCbmbq6JcKNrhHffCGA9z4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
