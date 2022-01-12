@@ -212,7 +212,6 @@ func TestContainer_FindByTag(t *testing.T) {
 	assert.Len(t, instances, 1)
 	assert.IsType(t, &TestService2{}, instances[0]) // nolint:exhaustivestruct
 
-
 	container.Register(di.NewServiceDef(di.StringRef("no-provider")).AddTag(di.StringRef("test")))
 	_, err = container.FindByTag(di.StringRef("test"))
 	assert.Error(t, err)
