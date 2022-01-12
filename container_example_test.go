@@ -36,7 +36,7 @@ func ExampleNewServiceContainer() {
 		// This can be any logger that implements logr.Logger interface
 		di.WithLogrImpl(funcr.New(
 			func(pfx, args string) { fmt.Println(pfx, args) },
-			funcr.Options{
+			funcr.Options{ //nolint:exhaustivestruct
 				LogCaller:    funcr.All,
 				LogTimestamp: true,
 				Verbosity:    6,
