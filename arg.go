@@ -21,9 +21,9 @@ const (
 
 type ArgParseEvent struct {
 	ServiceRef fmt.Stringer
-	Pos int
-	Arg Arg
-	Err error
+	Pos        int
+	Arg        Arg
+	Err        error
 }
 
 // Arg defines a argument for provider functions or defined calls.

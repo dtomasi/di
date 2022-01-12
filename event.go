@@ -5,6 +5,6 @@ package di
 type EventTopic int
 
 const (
-	EventTopicDIReady EventTopic = iota // di:ready
-	EventTopicArgParse // di:arg:parse
+	EventTopicDIReady  EventTopic = iota // di:ready
+	EventTopicArgParse                   // di:arg:parse
 )
