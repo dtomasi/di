@@ -52,9 +52,6 @@ func BuildContainer() (*di.Container, error) {
 				di.ContainerArg(),
 				// Injects another service
 				di.ServiceArg(di.StringRef("OtherService")),
-				// Injects the registered parameter provider
-				// see: parameter_provider.go
-				di.ParamProviderArg(),
 				// Injects a value using interface{}
 				di.InterfaceArg(true),
 				// Injects a parameter from registered provider
