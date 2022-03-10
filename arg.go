@@ -12,9 +12,6 @@ const (
 	ArgTypeInterface ArgType = iota
 	ArgTypeContext
 	ArgTypeContainer
-	ArgTypeParamProvider
-	ArgTypeLogger
-	ArgTypeNamedLogger
 	ArgTypeService
 	ArgTypeParam
 )
@@ -71,19 +68,4 @@ func ContextArg() Arg {
 // ContainerArg is a shortcut for an argument with no value that injects the container itself.
 func ContainerArg() Arg {
 	return ArgWithType(ArgTypeContainer, nil)
-}
-
-// LoggerArg is a shortcut for an argument with no value that injects the logger provided with the container.
-func LoggerArg() Arg {
-	return ArgWithType(ArgTypeLogger, nil)
-}
-
-// LoggerArg is a shortcut for an argument with no value that injects the logger provided with the container.
-func NamedLoggerArg(name string) Arg {
-	return ArgWithType(ArgTypeNamedLogger, name)
-}
-
-// ParamProviderArg is a shortcut for an argument with no value that injects the container´s parameter provider.
-func ParamProviderArg() Arg {
-	return ArgWithType(ArgTypeParamProvider, nil)
 }

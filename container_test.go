@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/dtomasi/di"
+	"github.com/dtomasi/di/services/logger"
 	"github.com/dtomasi/fakr"
 	eventbus "github.com/dtomasi/go-event-bus/v3"
-	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
@@ -20,7 +20,6 @@ type TestInterface interface {
 type TestService1 struct {
 	ctx        context.Context
 	c          *di.Container
-	pp         di.ParameterProvider
 	isTrue     bool
 	testString string
 }
@@ -28,14 +27,12 @@ type TestService1 struct {
 func NewTestService1(
 	ctx context.Context,
 	c *di.Container,
-	pp di.ParameterProvider,
 	isTrue bool,
 	testString string,
 ) *TestService1 {
 	return &TestService1{
 		ctx:        ctx,
 		c:          c,
-		pp:         pp,
 		isTrue:     isTrue,
 		testString: testString,
 	}
@@ -49,10 +46,6 @@ func (ti *TestService1) Container() *di.Container {
 	return ti.c
 }
 
-func (ti *TestService1) ParamProvider() di.ParameterProvider {
-	return ti.pp
-}
-
 func (ti *TestService1) True() bool {
 	return ti.isTrue
 }
@@ -63,12 +56,12 @@ func (ti *TestService1) TestString() string {
 
 type TestService2 struct {
 	testService1 TestInterface
-	logger       logr.Logger
+	logger       *logger.Service
 	isTrue       bool
 	testString   string
 }
 
-func NewTestService2(service1 TestInterface, logger logr.Logger, isTrue bool, testString string) *TestService2 {
+func NewTestService2(service1 TestInterface, logger *logger.Service, isTrue bool, testString string) *TestService2 {
 	return &TestService2{testService1: service1, logger: logger, isTrue: isTrue, testString: testString}
 }
 
@@ -84,7 +77,7 @@ func (ti *TestService2) TestService1() TestInterface {
 	return ti.testService1
 }
 
-func (ti *TestService2) Logger() logr.Logger {
+func (ti *TestService2) Logger() *logger.Service {
 	return ti.logger
 }
 
@@ -117,7 +110,6 @@ func BuildContainer() (*di.Container, error) {
 			Args(
 				di.ContextArg(),
 				di.ContainerArg(),
-				di.ParamProviderArg(),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
 			),
@@ -126,7 +118,7 @@ func BuildContainer() (*di.Container, error) {
 			Provider(NewTestService2).
 			Args(
 				di.ServiceArg(di.StringRef("TestService1")),
-				di.LoggerArg(),
+				di.ServiceArg(di.LoggerService),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
 			).
@@ -157,14 +149,13 @@ func TestContainer_Build(t *testing.T) {
 	assert.IsType(t, &TestService1{}, t1) //nolint:exhaustivestruct
 	assert.Implements(t, (*context.Context)(nil), t1.Context())
 	assert.IsType(t, &di.Container{}, t1.Container())
-	assert.Implements(t, (*di.ParameterProvider)(nil), t1.ParamProvider())
 	assert.True(t, t1.True())
 	assert.Equal(t, "foo", t1.TestString())
 
 	t2 := container.MustGet(di.StringRef("TestService2")).(*TestService2) //nolint:forcetypeassert
 	assert.IsType(t, &TestService2{}, t2)                                 //nolint:exhaustivestruct
 	assert.Implements(t, (*TestInterface)(nil), t2)
-	assert.IsType(t, logr.Logger{}, t2.Logger())
+	assert.IsType(t, &logger.Service{}, t2.Logger())
 	assert.True(t, t2.True())
 	assert.Equal(t, "foo", t2.TestString())
 	assert.IsType(t, &TestService1{}, t2.TestService1()) //nolint:exhaustivestruct

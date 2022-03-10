@@ -4,58 +4,67 @@ import (
 	"context"
 	"fmt"
 	"github.com/dtomasi/di/internal/utils"
+	"github.com/dtomasi/di/services/logger"
 	"github.com/dtomasi/fakr"
 	"github.com/dtomasi/go-event-bus/v3"
 	z "github.com/dtomasi/zerrors"
-	"github.com/go-logr/logr"
 	"reflect"
 )
 
 const (
-	loggerName           string = "di"
-	loggerVerbosityDebug int    = 6
-	singleReturnValue    int    = 1
-	doubleReturnValue    int    = 2
+	loggerName        string = "DI"
+	singleReturnValue int    = 1
+	doubleReturnValue int    = 2
 )
 
 // Container is the actual service container struct.
 type Container struct {
+	// execution context
 	ctx context.Context
-	// injectableLogger is used for injection.
-	injectableLogger logr.Logger
+
+	// function to cancel the context
+	ctxCancelFun context.CancelFunc
+
 	// logger is used for internal logs.
-	logger        logr.Logger
-	eventBus      *eventbus.EventBus
+	logger *logger.Service
+
+	// eventBus is the eventbus instance
+	eventBus *eventbus.EventBus
+
+	// The ParameterProvider
 	paramProvider ParameterProvider
-	serviceDefs   *ServiceDefMap
+
+	// Map of Service definitions
+	serviceDefs *ServiceDefMap
 }
 
 // NewServiceContainer returns a new Container instance.
 func NewServiceContainer(opts ...Option) *Container {
 	c := &Container{ //nolint:exhaustivestruct
-		ctx:              context.Background(),
-		injectableLogger: fakr.New(),
-		eventBus:         eventbus.NewEventBus(),
-		paramProvider:    &NoParameterProvider{},
-		serviceDefs:      NewServiceDefMap(),
+		ctx:           context.Background(),
+		logger:        logger.NewService(fakr.New()),
+		eventBus:      eventbus.NewEventBus(),
+		paramProvider: &NoParameterProvider{},
+		serviceDefs:   NewServiceDefMap(),
 	}
 
-	c.SetOpts(opts...)
-
-	return c
-}
-
-// SetOpts allows setting options after container creation.
-func (c *Container) SetOpts(opts ...Option) {
 	for _, opt := range opts {
 		opt(c)
 	}
 
-	// Setup logger name
-	c.logger = c.injectableLogger.WithName(loggerName)
+	// Get the context cancel function
+	c.ctx, c.ctxCancelFun = context.WithCancel(c.ctx)
 
 	// wrap container into context
 	c.ctx = context.WithValue(c.ctx, ContextKeyContainer, c)
+
+	// Register logger as a service to provide it to other services
+	c.Set(LoggerService, c.logger)
+
+	// Wrap the original logger to apply module name
+	c.logger = logger.NewService(c.logger.GetUnderlying().WithName(loggerName))
+
+	return c
 }
 
 // GetEventBus returns the eventbus instance. This is used to register to internal events that can be used as hooks.
@@ -66,6 +75,11 @@ func (c *Container) GetEventBus() *eventbus.EventBus {
 // GetContext returns the context.
 func (c *Container) GetContext() context.Context {
 	return c.ctx
+}
+
+// GetContext returns the context.
+func (c *Container) CancelContext() {
+	c.ctxCancelFun()
 }
 
 // Register lets you register a new ServiceDef to the container.
@@ -83,7 +97,7 @@ func (c *Container) Set(ref fmt.Stringer, s interface{}) *Container {
 		tags:     []fmt.Stringer{},
 	})
 
-	c.debugLogger().Info("added a new service via Set()", "service", ref.String())
+	c.logger.Debug("added a new service via Set()", "service", ref.String())
 
 	return c
 }
@@ -150,16 +164,15 @@ func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
 func (c *Container) Build() (err error) {
 	defer z.WrapPtrWithOpts(&err, "error while building container", z.WithType(ContainerBuildError))
 
-	c.debugLogger().Info("starting container build")
+	c.logger.Debug("starting container build")
 
 	err = c.serviceDefs.Range(func(key fmt.Stringer, serviceDef *ServiceDef) error {
-		c.debugLogger().Info("building services", "name", key.String())
+		c.logger.Debug("building services", "name", key.String())
 
 		// skip lazy initializing services here
 		if serviceDef.options.buildOnFirstRequest || serviceDef.options.alwaysRebuild {
-			c.debugLogger().
-				Info("skipping service because its set to lazy or should be rebuilt on each request",
-					"name", key.String())
+			c.logger.Debug("skipping service because its set to lazy or should be rebuilt on each request",
+				"name", key.String())
 
 			return nil
 		}
@@ -184,7 +197,7 @@ func (c *Container) Build() (err error) {
 		return err
 	}
 
-	c.debugLogger().Info("container built successfully")
+	c.logger.Debug("container built successfully")
 	c.eventBus.Publish(EventTopicDIReady.String(), c)
 
 	return nil
@@ -272,7 +285,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 	var parsedArgs []Arg
 
-	c.debugLogger().Info("parsing args for provider of services", "name", def.ref.String())
+	c.logger.Debug("parsing args for provider of services", "name", def.ref.String())
 
 	for pos, v := range def.args {
 		var (
@@ -305,18 +318,9 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		case ArgTypeContext:
 			// Push the context
 			argValue = c.ctx
-		case ArgTypeLogger:
-			// Push the logger
-			argValue = c.injectableLogger
-		case ArgTypeNamedLogger:
-			// Push named logger
-			argValue = c.injectableLogger.WithName(v.value.(string))
 		case ArgTypeContainer:
 			// Push the container itself
 			argValue = c
-		case ArgTypeParamProvider:
-			// Push the parameter provider
-			argValue = c.paramProvider
 		}
 
 		arg := Arg{
@@ -345,13 +349,7 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 		parsedArgs = append(parsedArgs, evt.Arg)
 	}
 
-	c.debugLogger().
-		Info("args for provider of services parsed successfully", "name", def.ref.String())
+	c.logger.Debug("args for provider of services parsed successfully", "name", def.ref.String())
 
 	return parsedArgs, nil
-}
-
-// debugLogger returns the logger with debug verbosity.
-func (c *Container) debugLogger() logr.Logger {
-	return c.logger.V(loggerVerbosityDebug)
 }
