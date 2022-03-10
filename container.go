@@ -67,6 +67,11 @@ func NewServiceContainer(opts ...Option) *Container {
 	return c
 }
 
+// SetParameterProvider allows to set the parameter provider even after container initialization.
+func (c *Container) SetParameterProvider(pp ParameterProvider) {
+	c.paramProvider = pp
+}
+
 // GetEventBus returns the eventbus instance. This is used to register to internal events that can be used as hooks.
 func (c *Container) GetEventBus() *eventbus.EventBus {
 	return c.eventBus
