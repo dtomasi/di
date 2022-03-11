@@ -8,6 +8,7 @@ import (
 	"github.com/dtomasi/fakr"
 	"github.com/dtomasi/go-event-bus/v3"
 	z "github.com/dtomasi/zerrors"
+	"github.com/go-logr/logr"
 	"reflect"
 )
 
@@ -65,6 +66,15 @@ func NewServiceContainer(opts ...Option) *Container {
 	c.logger = logger.NewService(c.logger.GetUnderlying().WithName(loggerName))
 
 	return c
+}
+
+// SetParameterProvider allows to set the parameter provider even after container initialization.
+func (c *Container) SetLogger(l logr.Logger) {
+	// Register logger as a service to provide it to other services
+	c.Set(LoggerService, logger.NewService(l))
+
+	// Wrap the original logger to apply module name
+	c.logger = logger.NewService(l.WithName(loggerName))
 }
 
 // SetParameterProvider allows to set the parameter provider even after container initialization.
