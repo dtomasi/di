@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/dtomasi/di"
-	"github.com/dtomasi/di/services/logger"
 	"github.com/dtomasi/fakr"
 	eventbus "github.com/dtomasi/go-event-bus/v3"
 	"github.com/stretchr/testify/assert"
@@ -56,13 +55,12 @@ func (ti *TestService1) TestString() string {
 
 type TestService2 struct {
 	testService1 TestInterface
-	logger       *logger.Service
 	isTrue       bool
 	testString   string
 }
 
-func NewTestService2(service1 TestInterface, logger *logger.Service, isTrue bool, testString string) *TestService2 {
-	return &TestService2{testService1: service1, logger: logger, isTrue: isTrue, testString: testString}
+func NewTestService2(service1 TestInterface, isTrue bool, testString string) *TestService2 {
+	return &TestService2{testService1: service1, isTrue: isTrue, testString: testString}
 }
 
 func (ti *TestService2) True() bool {
@@ -75,10 +73,6 @@ func (ti *TestService2) TestString() string {
 
 func (ti *TestService2) TestService1() TestInterface {
 	return ti.testService1
-}
-
-func (ti *TestService2) Logger() *logger.Service {
-	return ti.logger
 }
 
 type ParameterProviderMock struct{}
@@ -155,7 +149,6 @@ func TestContainer_Build(t *testing.T) {
 	t2 := container.MustGet(di.StringRef("TestService2")).(*TestService2) //nolint:forcetypeassert
 	assert.IsType(t, &TestService2{}, t2)                                 //nolint:exhaustivestruct
 	assert.Implements(t, (*TestInterface)(nil), t2)
-	assert.IsType(t, &logger.Service{}, t2.Logger())
 	assert.True(t, t2.True())
 	assert.Equal(t, "foo", t2.TestString())
 	assert.IsType(t, &TestService1{}, t2.TestService1()) //nolint:exhaustivestruct

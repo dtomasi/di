@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	"github.com/dtomasi/di/internal/utils"
+	"github.com/dtomasi/di/internal/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"

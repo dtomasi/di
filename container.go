@@ -3,19 +3,13 @@ package di
 import (
 	"context"
 	"fmt"
-	"github.com/dtomasi/di/internal/utils"
-	"github.com/dtomasi/di/services/logger"
+	loggerinternal "github.com/dtomasi/di/internal/pkg/logger"
+	"github.com/dtomasi/di/internal/pkg/utils"
 	"github.com/dtomasi/fakr"
 	"github.com/dtomasi/go-event-bus/v3"
 	z "github.com/dtomasi/zerrors"
 	"github.com/go-logr/logr"
 	"reflect"
-)
-
-const (
-	loggerName        string = "DI"
-	singleReturnValue int    = 1
-	doubleReturnValue int    = 2
 )
 
 // Container is the actual service container struct.
@@ -27,7 +21,7 @@ type Container struct {
 	ctxCancelFun context.CancelFunc
 
 	// logger is used for internal logs.
-	logger *logger.Service
+	logger *loggerinternal.InternalLogger
 
 	// eventBus is the eventbus instance
 	eventBus *eventbus.EventBus
@@ -43,7 +37,7 @@ type Container struct {
 func NewServiceContainer(opts ...Option) *Container {
 	c := &Container{ //nolint:exhaustivestruct
 		ctx:           context.Background(),
-		logger:        logger.NewService(fakr.New()),
+		logger:        loggerinternal.NewInternalLogger(fakr.New()),
 		eventBus:      eventbus.NewEventBus(),
 		paramProvider: &NoParameterProvider{},
 		serviceDefs:   NewServiceDefMap(),
@@ -59,22 +53,13 @@ func NewServiceContainer(opts ...Option) *Container {
 	// wrap container into context
 	c.ctx = context.WithValue(c.ctx, ContextKeyContainer, c)
 
-	// Register logger as a service to provide it to other services
-	c.Set(LoggerService, c.logger)
-
-	// Wrap the original logger to apply module name
-	c.logger = logger.NewService(c.logger.GetUnderlying().WithName(loggerName))
-
 	return c
 }
 
 // SetParameterProvider allows to set the parameter provider even after container initialization.
 func (c *Container) SetLogger(l logr.Logger) {
-	// Register logger as a service to provide it to other services
-	c.Set(LoggerService, logger.NewService(l))
-
 	// Wrap the original logger to apply module name
-	c.logger = logger.NewService(l.WithName(loggerName))
+	c.logger = loggerinternal.NewInternalLogger(l)
 }
 
 // SetParameterProvider allows to set the parameter provider even after container initialization.
@@ -270,9 +255,9 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 		returnValues := y.Call(inputValues)
 
 		switch len(returnValues) {
-		case singleReturnValue:
+		case 1:
 			return returnValues[0].Interface(), nil
-		case doubleReturnValue:
+		case 2: // nolint:gomnd
 			providerErr, ok := returnValues[1].Interface().(error)
 			if !ok {
 				providerErr = nil
