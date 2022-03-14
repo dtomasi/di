@@ -308,6 +308,13 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 			}
 
 			argValue = s
+		case ArgTypeServicesByTag:
+			services, err := c.FindByTag(v.value.(fmt.Stringer))
+			if err != nil {
+				argErr = err
+			}
+
+			argValue = services
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
