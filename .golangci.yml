@@ -21,3 +21,6 @@ linters:
     - paralleltest
     - godox
     - wrapcheck
+    - containedctx
+    - ireturn
+    - varnamelen
