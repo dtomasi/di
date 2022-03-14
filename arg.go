@@ -56,8 +56,8 @@ func ServiceArg(serviceRef fmt.Stringer) Arg {
 	return ArgWithType(ArgTypeService, serviceRef)
 }
 
-// ServicesByTag is a shortcut for a service argument.
-func ServicesByTag(tag fmt.Stringer) Arg {
+// ServicesByTagArg is a shortcut for a service argument.
+func ServicesByTagArg(tag fmt.Stringer) Arg {
 	return ArgWithType(ArgTypeServicesByTag, tag)
 }
 
