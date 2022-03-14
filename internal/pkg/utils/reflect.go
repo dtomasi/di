@@ -5,6 +5,11 @@ import "reflect"
 // GetType is a simple function for getting type as string for comparison.
 func GetType(ty reflect.Type) string {
 	t := ty
+
+	if t == nil {
+		return ""
+	}
+
 	if t.Kind() == reflect.Ptr {
 		return "*" + t.Elem().Name()
 	}
