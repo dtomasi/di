@@ -18,7 +18,8 @@ func TestNewServiceDef(t *testing.T) {
 			di.InterfaceArg(""),
 			di.ServiceArg(di.StringRef("bar")),
 			di.ParamArg(""),
-		).AddTag(di.StringRef("foo"))
+		).
+		Tags(di.StringRef("foo"))
 
 	if sd == nil {
 		t.Error("NewServiceDef returns nil value")

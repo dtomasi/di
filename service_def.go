@@ -55,15 +55,8 @@ func (sd *ServiceDef) Args(args ...Arg) *ServiceDef {
 }
 
 // AddTags allows to add multiple tags to a service definition.
-func (sd *ServiceDef) AddTags(tags ...fmt.Stringer) *ServiceDef {
+func (sd *ServiceDef) Tags(tags ...fmt.Stringer) *ServiceDef {
 	sd.tags = append(sd.tags, tags...)
-
-	return sd
-}
-
-// AddTag allows to add a tag to a service definition.
-func (sd *ServiceDef) AddTag(name fmt.Stringer) *ServiceDef {
-	sd.tags = append(sd.tags, name)
 
 	return sd
 }

@@ -28,7 +28,7 @@ func ExampleNewServiceDef() {
 			// NOTE: There are a bunch of other magic Args available. See documentation
 		).
 		// Adds a tag to the service definition. This allows to group services into logical units
-		AddTag(di.StringRef("greeter")).
+		Tags(di.StringRef("greeter")).
 		// Opt allows managing lifecycle of registered services within the container
 		Opts(
 			// This option defines that a service should not be created on Building the container.
