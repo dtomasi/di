@@ -134,20 +134,25 @@ func (c *Container) MustGet(ref fmt.Stringer) interface{} {
 	return i
 }
 
-// FindByTag finds all service instances with given tag and returns them as a slice.
-func (c *Container) FindByTag(tag fmt.Stringer) ([]interface{}, error) {
+// FindByTags finds all service instances with given tags and returns them as a slice.
+func (c *Container) FindByTags(tags []fmt.Stringer) ([]interface{}, error) {
 	var instances []interface{}
 
 	err := c.serviceDefs.Range(func(key fmt.Stringer, def *ServiceDef) error {
-		for _, defTag := range def.tags {
-			if defTag == tag {
-				// use Get to ensure the service is built if not already.
-				s, getErr := c.Get(key)
-				if getErr != nil {
-					return getErr
-				}
-				instances = append(instances, s)
+		matchCount := 0
+		for _, searchTag := range tags {
+			if containsTag(def.tags, searchTag) {
+				matchCount++
 			}
+		}
+
+		if matchCount == len(tags) {
+			// use Get to ensure the service is built if not already.
+			s, getErr := c.Get(key)
+			if getErr != nil {
+				return getErr
+			}
+			instances = append(instances, s)
 		}
 
 		return nil
@@ -308,8 +313,8 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 			}
 
 			argValue = s
-		case ArgTypeServicesByTag:
-			services, err := c.FindByTag(v.value.(fmt.Stringer))
+		case ArgTypeServicesByTags:
+			services, err := c.FindByTags(v.value.([]fmt.Stringer))
 			if err != nil {
 				argErr = err
 			}
@@ -366,4 +371,14 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 	c.logger.Debug("args for provider of services parsed successfully", "name", def.ref.String())
 
 	return parsedArgs, nil
+}
+
+func containsTag(a []fmt.Stringer, x fmt.Stringer) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+
+	return false
 }

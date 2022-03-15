@@ -112,7 +112,6 @@ func BuildContainer() (*di.Container, error) {
 			Provider(NewTestService2).
 			Args(
 				di.ServiceArg(di.StringRef("TestService1")),
-				di.ServiceArg(di.LoggerService),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
 			).
@@ -191,13 +190,13 @@ func TestContainer_FindByTag(t *testing.T) {
 		t.Error(err)
 	}
 
-	instances, err := container.FindByTag(di.StringRef("test"))
+	instances, err := container.FindByTags([]fmt.Stringer{di.StringRef("test")})
 	assert.NoError(t, err)
 	assert.Len(t, instances, 1)
 	assert.IsType(t, &TestService2{}, instances[0]) // nolint:exhaustivestruct
 
 	container.Register(di.NewServiceDef(di.StringRef("no-provider")).AddTag(di.StringRef("test")))
-	_, err = container.FindByTag(di.StringRef("test"))
+	_, err = container.FindByTags([]fmt.Stringer{di.StringRef("test")})
 	assert.Error(t, err)
 }
 

@@ -13,7 +13,7 @@ const (
 	ArgTypeContext
 	ArgTypeContainer
 	ArgTypeService
-	ArgTypeServicesByTag
+	ArgTypeServicesByTags
 	ArgTypeParam
 )
 
@@ -56,9 +56,9 @@ func ServiceArg(serviceRef fmt.Stringer) Arg {
 	return ArgWithType(ArgTypeService, serviceRef)
 }
 
-// ServicesByTagArg is a shortcut for a service argument.
-func ServicesByTagArg(tag fmt.Stringer) Arg {
-	return ArgWithType(ArgTypeServicesByTag, tag)
+// ServicesByTagsArg is a shortcut for a service argument.
+func ServicesByTagsArg(tags []fmt.Stringer) Arg {
+	return ArgWithType(ArgTypeServicesByTags, tags)
 }
 
 // ParamArg is a shortcut for a parameter argument.
