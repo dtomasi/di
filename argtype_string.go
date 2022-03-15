@@ -13,12 +13,13 @@ func _() {
 	_ = x[ArgTypeContainer-2]
 	_ = x[ArgTypeService-3]
 	_ = x[ArgTypeServicesByTags-4]
-	_ = x[ArgTypeParam-5]
+	_ = x[ArgTypeEventBus-5]
+	_ = x[ArgTypeParam-6]
 }
 
-const _ArgType_name = "ArgTypeInterfaceArgTypeContextArgTypeContainerArgTypeServiceArgTypeServicesByTagsArgTypeParam"
+const _ArgType_name = "ArgTypeInterfaceArgTypeContextArgTypeContainerArgTypeServiceArgTypeServicesByTagsArgTypeEventBusArgTypeParam"
 
-var _ArgType_index = [...]uint8{0, 16, 30, 46, 60, 81, 93}
+var _ArgType_index = [...]uint8{0, 16, 30, 46, 60, 81, 96, 108}
 
 func (i ArgType) String() string {
 	if i < 0 || i >= ArgType(len(_ArgType_index)-1) {

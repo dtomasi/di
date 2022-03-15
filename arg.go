@@ -14,6 +14,7 @@ const (
 	ArgTypeContainer
 	ArgTypeService
 	ArgTypeServicesByTags
+	ArgTypeEventBus
 	ArgTypeParam
 )
 
@@ -74,4 +75,9 @@ func ContextArg() Arg {
 // ContainerArg is a shortcut for an argument with no value that injects the container itself.
 func ContainerArg() Arg {
 	return ArgWithType(ArgTypeContainer, nil)
+}
+
+// EventBusArg is a shortcut for an argument with no value that injects the container itself.
+func EventBusArg() Arg {
+	return ArgWithType(ArgTypeEventBus, nil)
 }

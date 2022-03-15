@@ -320,6 +320,9 @@ func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
 			}
 
 			argValue = services
+
+		case ArgTypeEventBus:
+			argValue = c.eventBus
 		case ArgTypeParam:
 			val, err := c.paramProvider.Get(v.value.(string))
 			if err != nil {
