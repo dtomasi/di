@@ -244,7 +244,11 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 			inArgType := reflect.TypeOf(parsedArgs[i].value)
 
 			if inArgType == nil {
-				inputValues = append(inputValues, reflect.New(inType))
+				if inType.Kind() == reflect.Ptr {
+					inputValues = append(inputValues, reflect.New(inType))
+				} else {
+					inputValues = append(inputValues, reflect.New(inType).Elem())
+				}
 
 				continue
 			}
