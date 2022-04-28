@@ -1,13 +1,15 @@
 package di
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
+// ServiceDefArg is the interface that arguments have to im.
 type ServiceDefArg interface {
 	evaluate(*Container) (interface{}, error)
 }
 
-// Interface Arg
-// This argument allows to pass any value that is provided to the service.
 type interfaceArg struct {
 	inValue interface{}
 }
@@ -17,6 +19,7 @@ func (a *interfaceArg) evaluate(_ *Container) (interface{}, error) {
 }
 
 // InterfaceArg is a shortcut for an argument of type interface{}.
+// This argument allows to pass any value that is provided to the service.
 func InterfaceArg(in interface{}) ServiceDefArg {
 	return &interfaceArg{inValue: in}
 }
@@ -33,6 +36,30 @@ func (a *serviceRefArg) evaluate(c *Container) (interface{}, error) {
 
 func ServiceArg(ref fmt.Stringer) ServiceDefArg {
 	return &serviceRefArg{ref: ref}
+}
+
+// Service Method Call Argument allows to use the return value of a method call on given service.
+type serviceMethodCallArg struct {
+	serviceRef fmt.Stringer
+	methodName string
+	args       []ServiceDefArg
+}
+
+func (a *serviceMethodCallArg) evaluate(c *Container) (interface{}, error) {
+	s, err := c.Get(a.serviceRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.callReflectValueWithArgs(reflect.ValueOf(s).MethodByName(a.methodName), a.args)
+}
+
+func ServiceMethodCallArg(serviceRef fmt.Stringer, methodName string, args ...ServiceDefArg) ServiceDefArg {
+	return &serviceMethodCallArg{
+		serviceRef: serviceRef,
+		methodName: methodName,
+		args:       args,
+	}
 }
 
 // Services By Tag Arg allows to get one or more services by tags and inject them.

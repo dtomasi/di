@@ -208,100 +208,102 @@ func (c *Container) Build() (err error) {
 	return nil
 }
 
+func (c *Container) callReflectValueWithArgs(
+	callable reflect.Value,
+	serviceDefArgs []ServiceDefArg,
+) (interface{}, error) {
+	if callable.Type().Kind() != reflect.Func {
+		return nil, z.NewWithOpts("callable not a function", z.WithType(CallableNotAFuncError))
+	}
+
+	evaluatedArgs, err := c.evaluateArgs(serviceDefArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	callableNumInArgs := callable.Type().NumIn()
+	if callableNumInArgs != len(evaluatedArgs) {
+		return nil, z.NewWithOpts(fmt.Sprintf("expected %d got %d",
+			callableNumInArgs,
+			len(evaluatedArgs),
+		), z.WithType(CallableArgCountMismatchError))
+	}
+
+	var callableInValues []reflect.Value
+
+	// Prepare input args for callable
+	for i := 0; i < callableNumInArgs; i++ {
+		callableInType := callable.Type().In(i)
+
+		inArgType := reflect.TypeOf(evaluatedArgs[i])
+
+		if inArgType == nil {
+			if callableInType.Kind() == reflect.Ptr {
+				callableInValues = append(callableInValues, reflect.New(callableInType))
+			} else {
+				callableInValues = append(callableInValues, reflect.New(callableInType).Elem())
+			}
+
+			continue
+		}
+
+		inTypeString := utils.GetType(callableInType)
+		inArgTypeString := utils.GetType(inArgType)
+
+		if inTypeString != inArgTypeString && !inArgType.Implements(callableInType) {
+			return nil,
+				z.NewWithOpts(fmt.Sprintf("expected %s got %s",
+					inTypeString,
+					inArgTypeString,
+				), z.WithType(CallableArgTypeMismatchError))
+		}
+
+		callableInValues = append(callableInValues, reflect.ValueOf(evaluatedArgs[i]))
+	}
+
+	// Call the callable
+	returnValues := callable.Call(callableInValues)
+
+	switch len(returnValues) {
+	case 1:
+		return returnValues[0].Interface(), nil
+	case 2: // nolint:gomnd
+		providerErr, ok := returnValues[1].Interface().(error)
+		if !ok {
+			providerErr = nil
+		}
+
+		return returnValues[0].Interface(), providerErr
+
+	default:
+		return nil,
+			z.NewWithOpts(
+				fmt.Sprintf("callable can only have 2 return values at max (interface{}, error). Got %d",
+					len(returnValues),
+				),
+				z.WithType(CallableToManyReturnValuesError),
+			)
+	}
+}
+
 func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{}, err error) {
 	defer z.WrapPtrWithOpts(&err,
 		fmt.Sprintf("error while building service %s", def.ref),
 		z.WithType(ServiceBuildError),
 	)
 
-	parsedArgs, err := c.parseArgs(def)
-	if err != nil {
-		return nil, err
+	if def.provider == nil {
+		return nil, z.NewWithOpts("provider missing", z.WithType(ProviderMissingError))
 	}
 
-	// build using provider function.
-	if def.provider != nil {
-		x := reflect.TypeOf(def.provider)
-
-		if x.Kind() != reflect.Func {
-			return nil, z.NewWithOpts("provider not a function", z.WithType(ProviderNotAFuncError))
-		}
-
-		inputArgCount := x.NumIn()
-		if inputArgCount != len(parsedArgs) {
-			return nil,
-				z.NewWithOpts(fmt.Sprintf("expected %d got %d",
-					inputArgCount,
-					len(parsedArgs),
-				), z.WithType(ProviderArgCountMismatchError))
-		}
-
-		var inputValues []reflect.Value
-
-		for i := 0; i < inputArgCount; i++ {
-			inType := x.In(i)
-
-			inArgType := reflect.TypeOf(parsedArgs[i])
-
-			if inArgType == nil {
-				if inType.Kind() == reflect.Ptr {
-					inputValues = append(inputValues, reflect.New(inType))
-				} else {
-					inputValues = append(inputValues, reflect.New(inType).Elem())
-				}
-
-				continue
-			}
-
-			inTypeString := utils.GetType(inType)
-			inArgTypeString := utils.GetType(inArgType)
-
-			if inTypeString != inArgTypeString && !inArgType.Implements(inType) {
-				return nil,
-					z.NewWithOpts(fmt.Sprintf("expected %s got %s",
-						inTypeString,
-						inArgTypeString,
-					), z.WithType(ProviderArgTypeMismatchError))
-			}
-
-			inputValues = append(inputValues, reflect.ValueOf(parsedArgs[i]))
-		}
-
-		y := reflect.ValueOf(def.provider)
-		returnValues := y.Call(inputValues)
-
-		switch len(returnValues) {
-		case 1:
-			return returnValues[0].Interface(), nil
-		case 2: // nolint:gomnd
-			providerErr, ok := returnValues[1].Interface().(error)
-			if !ok {
-				providerErr = nil
-			}
-
-			return returnValues[0].Interface(), providerErr
-
-		default:
-			return nil,
-				z.NewWithOpts(
-					fmt.Sprintf("providers can only have 2 return values at max (interface{}, error). Got %d",
-						len(returnValues),
-					),
-					z.WithType(ProviderToManyReturnValuesError),
-				)
-		}
-	}
-
-	return nil, z.NewWithOpts("provider missing", z.WithType(ProviderMissingError))
+	return c.callReflectValueWithArgs(reflect.ValueOf(def.provider), def.args)
 }
 
-// parseArgs parses the arguments and assigns values by arg type.
+// evaluateArgs parses the arguments and assigns values by arg type.
 // this function returns a new arg slice that is used for building the service
 // without touching the original defined args.
-func (c *Container) parseArgs(def *ServiceDef) (args []interface{}, err error) {
-	c.logger.Debug("parsing args for provider of services", "name", def.ref.String())
-
-	for _, v := range def.args {
+func (c *Container) evaluateArgs(args []ServiceDefArg) (eArgs []interface{}, err error) {
+	for _, v := range args {
 		var val interface{}
 
 		val, err = v.evaluate(c)
@@ -309,10 +311,8 @@ func (c *Container) parseArgs(def *ServiceDef) (args []interface{}, err error) {
 			return
 		}
 
-		args = append(args, val)
+		eArgs = append(eArgs, val)
 	}
-
-	c.logger.Debug("args for provider of services parsed successfully", "name", def.ref.String())
 
 	return
 }

@@ -10,9 +10,9 @@ const (
 	ServiceNotFoundError
 	ServiceBuildError
 	ProviderMissingError
-	ProviderNotAFuncError
-	ProviderToManyReturnValuesError
-	ProviderArgCountMismatchError
-	ProviderArgTypeMismatchError
+	CallableNotAFuncError
+	CallableToManyReturnValuesError
+	CallableArgCountMismatchError
+	CallableArgTypeMismatchError
 	ParamProviderNotDefinedError
 )
