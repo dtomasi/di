@@ -50,7 +50,7 @@ func BuildContainer() (*di.Container, error) {
 				// Injects the whole DI Container
 				di.ContainerArg(),
 				// Injects another service
-				di.ServiceRefArg(di.StringRef("OtherService")),
+				di.ServiceArg(di.StringRef("OtherService")),
 				// Inject multiple services by tag
 				di.ServicesByTagsArg([]fmt.Stringer{di.StringRef("foo")}),
 				// Injects a value using interface{}

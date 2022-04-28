@@ -111,7 +111,7 @@ func BuildContainer() (*di.Container, error) {
 		di.NewServiceDef(di.StringRef("TestService2")).
 			Provider(NewTestService2).
 			Args(
-				di.ServiceRefArg(di.StringRef("TestService1")),
+				di.ServiceArg(di.StringRef("TestService1")),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
 			).
