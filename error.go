@@ -14,7 +14,5 @@ const (
 	ProviderToManyReturnValuesError
 	ProviderArgCountMismatchError
 	ProviderArgTypeMismatchError
-	ArgParsingEventError
-	ParamProviderGetError
 	ParamProviderNotDefinedError
 )
