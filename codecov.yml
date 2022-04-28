@@ -6,3 +6,4 @@ coverage:
 ignore:
   - "errortype_string.go"
   - "eventtopic_string.go"
+  - "zz_gen_*"
