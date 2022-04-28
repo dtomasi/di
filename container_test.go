@@ -53,14 +53,29 @@ func (ti *TestService1) TestString() string {
 	return ti.testString
 }
 
-type TestService2 struct {
-	testService1 TestInterface
-	isTrue       bool
-	testString   string
+func (ti *TestService1) TestFactoryMethod(name string) string {
+	return fmt.Sprintf("Hello %s", name)
 }
 
-func NewTestService2(service1 TestInterface, isTrue bool, testString string) *TestService2 {
-	return &TestService2{testService1: service1, isTrue: isTrue, testString: testString}
+type TestService2 struct {
+	testService1          TestInterface
+	isTrue                bool
+	testString            string
+	testStringFromFactory string
+}
+
+func NewTestService2(
+	service1 TestInterface,
+	isTrue bool,
+	testString string,
+	testStringFromFactory string,
+) *TestService2 {
+	return &TestService2{
+		testService1:          service1,
+		isTrue:                isTrue,
+		testString:            testString,
+		testStringFromFactory: testStringFromFactory,
+	}
 }
 
 func (ti *TestService2) True() bool {
@@ -114,6 +129,11 @@ func BuildContainer() (*di.Container, error) {
 				di.ServiceArg(di.StringRef("TestService1")),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
+				di.ServiceMethodCallArg(
+					di.StringRef("TestService1"),
+					"TestFactoryMethod",
+					di.InterfaceArg("test service"),
+				),
 			).
 			Tags(di.StringRef("test")),
 	)
@@ -151,6 +171,7 @@ func TestContainer_Build(t *testing.T) {
 	assert.True(t, t2.True())
 	assert.Equal(t, "foo", t2.TestString())
 	assert.IsType(t, &TestService1{}, t2.TestService1()) //nolint:exhaustivestruct
+	assert.True(t, len(t2.testStringFromFactory) > 0)
 }
 
 func TestContainer_Build_ConcurrentRead(t *testing.T) {
