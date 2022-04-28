@@ -241,7 +241,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 		for i := 0; i < inputArgCount; i++ {
 			inType := x.In(i)
 
-			inArgType := reflect.TypeOf(parsedArgs[i].value)
+			inArgType := reflect.TypeOf(parsedArgs[i])
 
 			if inArgType == nil {
 				if inType.Kind() == reflect.Ptr {
@@ -264,7 +264,7 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 					), z.WithType(ProviderArgTypeMismatchError))
 			}
 
-			inputValues = append(inputValues, reflect.ValueOf(parsedArgs[i].value))
+			inputValues = append(inputValues, reflect.ValueOf(parsedArgs[i]))
 		}
 
 		y := reflect.ValueOf(def.provider)
@@ -298,86 +298,23 @@ func (c *Container) buildServiceInstance(def *ServiceDef) (instance interface{},
 // parseArgs parses the arguments and assigns values by arg type.
 // this function returns a new arg slice that is used for building the service
 // without touching the original defined args.
-func (c *Container) parseArgs(def *ServiceDef) ([]Arg, error) {
-	var parsedArgs []Arg
-
+func (c *Container) parseArgs(def *ServiceDef) (args []interface{}, err error) {
 	c.logger.Debug("parsing args for provider of services", "name", def.ref.String())
 
-	for pos, v := range def.args {
-		var (
-			argValue interface{}
-			argErr   error
-		)
+	for _, v := range def.args {
+		var val interface{}
 
-		switch v._type {
-		case ArgTypeService:
-			s, err := c.Get(v.value.(fmt.Stringer))
-			if err != nil {
-				argErr = err
-			}
-
-			argValue = s
-		case ArgTypeServicesByTags:
-			services, err := c.FindByTags(v.value.([]fmt.Stringer))
-			if err != nil {
-				argErr = err
-			}
-
-			argValue = services
-
-		case ArgTypeEventBus:
-			argValue = c.eventBus
-		case ArgTypeParam:
-			val, err := c.paramProvider.Get(v.value.(string))
-			if err != nil {
-				argErr = z.NewWithOpts(
-					fmt.Sprintf("error getting parameter %s from provider", v.value),
-					z.WithWrappedError(err),
-					z.WithType(ParamProviderGetError),
-				)
-			}
-
-			argValue = val
-		case ArgTypeInterface:
-			// Take the argument as it is
-			argValue = v.value
-		case ArgTypeContext:
-			// Push the context
-			argValue = c.ctx
-		case ArgTypeContainer:
-			// Push the container itself
-			argValue = c
+		val, err = v.Evaluate(c)
+		if err != nil {
+			return
 		}
 
-		arg := Arg{
-			_type: v._type,
-			value: argValue,
-		}
-
-		evt, ok := c.eventBus.Publish(EventTopicArgParse.String(), ArgParseEvent{
-			ServiceRef: def.ref,
-			Pos:        pos,
-			Arg:        arg,
-			Err:        argErr,
-		}).(ArgParseEvent)
-
-		if !ok {
-			return nil, z.NewWithOpts(
-				fmt.Sprintf("event %s must return a ArgParseEvent", EventTopicArgParse.String()),
-				z.WithType(ArgParsingEventError),
-			)
-		}
-
-		if evt.Err != nil {
-			return nil, argErr
-		}
-
-		parsedArgs = append(parsedArgs, evt.Arg)
+		args = append(args, val)
 	}
 
 	c.logger.Debug("args for provider of services parsed successfully", "name", def.ref.String())
 
-	return parsedArgs, nil
+	return
 }
 
 func containsTag(a []fmt.Stringer, x fmt.Stringer) bool {

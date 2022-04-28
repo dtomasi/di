@@ -9,12 +9,11 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[EventTopicDIReady-0]
-	_ = x[EventTopicArgParse-1]
 }
 
-const _EventTopic_name = "di:readydi:arg:parse"
+const _EventTopic_name = "di:ready"
 
-var _EventTopic_index = [...]uint8{0, 8, 20}
+var _EventTopic_index = [...]uint8{0, 8}
 
 func (i EventTopic) String() string {
 	if i < 0 || i >= EventTopic(len(_EventTopic_index)-1) {

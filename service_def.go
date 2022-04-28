@@ -12,7 +12,7 @@ type ServiceDef struct {
 	instance interface{}
 	options  *serviceOptions
 	provider interface{}
-	args     []Arg
+	args     []ServiceDefArg
 	tags     []fmt.Stringer
 }
 
@@ -23,7 +23,7 @@ func NewServiceDef(ref fmt.Stringer) *ServiceDef {
 		instance: nil,
 		options:  newServiceOptions(),
 		provider: nil,
-		args:     []Arg{},
+		args:     []ServiceDefArg{},
 		tags:     []fmt.Stringer{},
 	}
 
@@ -48,7 +48,7 @@ func (sd *ServiceDef) Provider(provider interface{}) *ServiceDef {
 }
 
 // Args accepts multiple constructor/provider function arguments.
-func (sd *ServiceDef) Args(args ...Arg) *ServiceDef {
+func (sd *ServiceDef) Args(args ...ServiceDefArg) *ServiceDef {
 	sd.args = append(sd.args, args...)
 
 	return sd

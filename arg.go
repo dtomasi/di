@@ -2,82 +2,100 @@ package di
 
 import "fmt"
 
-//go:generate stringer -type=ArgType
-
-// ArgType defines the type of argument.
-// Currently, those are service or param (parameter from service container).
-type ArgType int
-
-const (
-	ArgTypeInterface ArgType = iota
-	ArgTypeContext
-	ArgTypeContainer
-	ArgTypeService
-	ArgTypeServicesByTags
-	ArgTypeEventBus
-	ArgTypeParam
-)
-
-type ArgParseEvent struct {
-	ServiceRef fmt.Stringer
-	Pos        int
-	Arg        Arg
-	Err        error
+type ServiceDefArg interface {
+	Evaluate(*Container) (interface{}, error)
 }
 
-// Arg defines a argument for provider functions or defined calls.
-type Arg struct {
-	_type ArgType
-	value interface{}
+// Interface Arg
+// This argument allows to pass any value that is provided to the service.
+type interfaceArg struct {
+	inValue interface{}
 }
 
-func (a Arg) GetType() ArgType {
-	return a._type
-}
-
-func (a Arg) GetValue() interface{} {
-	return a.value
-}
-
-// ArgWithType defines an argument by type, name and value.
-func ArgWithType(argType ArgType, argValue interface{}) Arg {
-	return Arg{
-		_type: argType,
-		value: argValue,
-	}
+func (a *interfaceArg) Evaluate(_ *Container) (interface{}, error) {
+	return a.inValue, nil
 }
 
 // InterfaceArg is a shortcut for an argument of type interface{}.
-func InterfaceArg(in interface{}) Arg {
-	return ArgWithType(ArgTypeInterface, in)
+func InterfaceArg(in interface{}) ServiceDefArg {
+	return &interfaceArg{inValue: in}
 }
 
-// ServiceArg is a shortcut for a service argument.
-func ServiceArg(serviceRef fmt.Stringer) Arg {
-	return ArgWithType(ArgTypeService, serviceRef)
+// ServiceRef Arg
+// This argument type allows to pass a reference to a service that will be injected.
+type serviceRefArg struct {
+	ref fmt.Stringer
+}
+
+func (a *serviceRefArg) Evaluate(c *Container) (interface{}, error) {
+	return c.Get(a.ref)
+}
+
+func ServiceRefArg(ref fmt.Stringer) ServiceDefArg {
+	return &serviceRefArg{ref: ref}
+}
+
+// Deprecated: use ServiceRefArg.
+func ServiceArg(ref fmt.Stringer) ServiceDefArg {
+	return ServiceRefArg(ref)
+}
+
+// Services By Tag Arg allows to get one or more services by tags and inject them.
+type servicesByTagArg struct {
+	tags []fmt.Stringer
+}
+
+func (a *servicesByTagArg) Evaluate(c *Container) (interface{}, error) {
+	return c.FindByTags(a.tags)
 }
 
 // ServicesByTagsArg is a shortcut for a service argument.
-func ServicesByTagsArg(tags []fmt.Stringer) Arg {
-	return ArgWithType(ArgTypeServicesByTags, tags)
+func ServicesByTagsArg(tags []fmt.Stringer) ServiceDefArg {
+	return &servicesByTagArg{tags: tags}
 }
 
-// ParamArg is a shortcut for a parameter argument.
-func ParamArg(paramPath string) Arg {
-	return ArgWithType(ArgTypeParam, paramPath)
+// Parameter Argument allows to get parameters by path/dot notation from parameter provider.
+type paramArg struct {
+	paramPath string
 }
 
-// ContextArg is a shortcut for an argument with no value that injects the context.
-func ContextArg() Arg {
-	return ArgWithType(ArgTypeContext, nil)
+func (a *paramArg) Evaluate(c *Container) (interface{}, error) {
+	return c.paramProvider.Get(a.paramPath)
 }
 
-// ContainerArg is a shortcut for an argument with no value that injects the container itself.
-func ContainerArg() Arg {
-	return ArgWithType(ArgTypeContainer, nil)
+func ParamArg(paramPath string) ServiceDefArg {
+	return &paramArg{paramPath: paramPath}
 }
 
-// EventBusArg is a shortcut for an argument with no value that injects the container itself.
-func EventBusArg() Arg {
-	return ArgWithType(ArgTypeEventBus, nil)
+// Context Argument injects the context from di.Container.
+type contextArg struct{}
+
+func (a *contextArg) Evaluate(c *Container) (interface{}, error) {
+	return c.ctx, nil
+}
+
+func ContextArg() ServiceDefArg {
+	return &contextArg{}
+}
+
+// Container Argument injects the container from di.Container.
+type containerArg struct{}
+
+func (a *containerArg) Evaluate(c *Container) (interface{}, error) {
+	return c, nil
+}
+
+func ContainerArg() ServiceDefArg {
+	return &containerArg{}
+}
+
+// EventBus Argument injects the eventBus from di.EventBus.
+type eventBusArg struct{}
+
+func (a *eventBusArg) Evaluate(c *Container) (interface{}, error) {
+	return c.eventBus, nil
+}
+
+func EventBusArg() ServiceDefArg {
+	return &eventBusArg{}
 }
