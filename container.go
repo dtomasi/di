@@ -304,7 +304,7 @@ func (c *Container) parseArgs(def *ServiceDef) (args []interface{}, err error) {
 	for _, v := range def.args {
 		var val interface{}
 
-		val, err = v.Evaluate(c)
+		val, err = v.evaluate(c)
 		if err != nil {
 			return
 		}

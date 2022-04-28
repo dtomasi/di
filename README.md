@@ -18,7 +18,6 @@ See also /examples directory
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/dtomasi/di"
 	"log"
@@ -51,12 +50,16 @@ func BuildContainer() (*di.Container, error) {
 				// Injects the whole DI Container
 				di.ContainerArg(),
 				// Injects another service
-				di.ServiceArg(di.StringRef("OtherService")),
+				di.ServiceRefArg(di.StringRef("OtherService")),
+				// Inject multiple services by tag
+				di.ServicesByTagsArg([]fmt.Stringer{di.StringRef("foo")}),
 				// Injects a value using interface{}
 				di.InterfaceArg(true),
 				// Injects a parameter from registered provider
 				// via Get(key string) (interface{}, error)
 				di.ParamArg("foo.bar.baz"),
+				// Inject Event Bus
+				di.EventBusArg(),
 			),
 	)
 

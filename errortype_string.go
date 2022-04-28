@@ -16,14 +16,12 @@ func _() {
 	_ = x[ProviderToManyReturnValuesError-5]
 	_ = x[ProviderArgCountMismatchError-6]
 	_ = x[ProviderArgTypeMismatchError-7]
-	_ = x[ArgParsingEventError-8]
-	_ = x[ParamProviderGetError-9]
-	_ = x[ParamProviderNotDefinedError-10]
+	_ = x[ParamProviderNotDefinedError-8]
 }
 
-const _ErrorType_name = "ContainerBuildErrorServiceNotFoundErrorServiceBuildErrorProviderMissingErrorProviderNotAFuncErrorProviderToManyReturnValuesErrorProviderArgCountMismatchErrorProviderArgTypeMismatchErrorArgParsingEventErrorParamProviderGetErrorParamProviderNotDefinedError"
+const _ErrorType_name = "ContainerBuildErrorServiceNotFoundErrorServiceBuildErrorProviderMissingErrorProviderNotAFuncErrorProviderToManyReturnValuesErrorProviderArgCountMismatchErrorProviderArgTypeMismatchErrorParamProviderNotDefinedError"
 
-var _ErrorType_index = [...]uint8{0, 19, 39, 56, 76, 97, 128, 157, 185, 205, 226, 254}
+var _ErrorType_index = [...]uint8{0, 19, 39, 56, 76, 97, 128, 157, 185, 213}
 
 func (i ErrorType) String() string {
 	if i < 0 || i >= ErrorType(len(_ErrorType_index)-1) {

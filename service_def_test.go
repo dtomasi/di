@@ -16,7 +16,7 @@ func TestNewServiceDef(t *testing.T) {
 			di.ContextArg(),
 			di.ContainerArg(),
 			di.InterfaceArg(""),
-			di.ServiceArg(di.StringRef("bar")),
+			di.ServiceRefArg(di.StringRef("bar")),
 			di.ParamArg(""),
 		).
 		Tags(di.StringRef("foo"))

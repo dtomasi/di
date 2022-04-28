@@ -100,14 +100,14 @@ func main() {
 			Provider(greeter.NewGreeter).
 			Args(
 				di.ContextArg(),
-				di.ServiceArg(di.LoggerService),
+				di.ServiceRefArg(di.LoggerService),
 				di.ParamArg("morning"),
 			),
 		di.NewServiceDef(greeter.ServiceGreeterAfternoon).
 			Provider(greeter.NewGreeter).
 			Args(
 				di.ContextArg(),
-				di.ServiceArg(di.LoggerService),
+				di.ServiceRefArg(di.LoggerService),
 				di.ParamArg("afternoon"),
 			),
 		di.NewServiceDef(greeter.ServiceGreeterEvening).
@@ -118,7 +118,7 @@ func main() {
 			Provider(greeter.NewGreeter).
 			Args(
 				di.ContextArg(),
-				di.ServiceArg(di.LoggerService),
+				di.ServiceRefArg(di.LoggerService),
 				di.ParamArg("evening"),
 			),
 	)
