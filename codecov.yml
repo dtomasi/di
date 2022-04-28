@@ -4,6 +4,8 @@ coverage:
   range: "60...100"
 
 ignore:
+  ## Ignore arg.go as all of those are tested indirectly or as integration
+  - "arg.go"
   - "argtype_string.go"
   - "errtype_string.go"
   - "eventtopic_string.go"
