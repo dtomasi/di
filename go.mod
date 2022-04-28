@@ -7,7 +7,7 @@ require (
 	github.com/dtomasi/go-event-bus/v3 v3.0.0
 	github.com/dtomasi/zerrors v0.3.2
 	github.com/go-logr/logr v1.2.2
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 )
 
 require (
