@@ -4,6 +4,4 @@ coverage:
   range: "60...100"
 
 ignore:
-  - "errortype_string.go"
-  - "eventtopic_string.go"
   - "zz_gen_*"
