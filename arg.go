@@ -7,14 +7,14 @@ import (
 
 // ServiceDefArg is the interface that arguments have to im.
 type ServiceDefArg interface {
-	evaluate(*Container) (interface{}, error)
+	Evaluate(*Container) (interface{}, error)
 }
 
 type interfaceArg struct {
 	inValue interface{}
 }
 
-func (a *interfaceArg) evaluate(_ *Container) (interface{}, error) {
+func (a *interfaceArg) Evaluate(_ *Container) (interface{}, error) {
 	return a.inValue, nil
 }
 
@@ -30,7 +30,7 @@ type serviceRefArg struct {
 	ref fmt.Stringer
 }
 
-func (a *serviceRefArg) evaluate(c *Container) (interface{}, error) {
+func (a *serviceRefArg) Evaluate(c *Container) (interface{}, error) {
 	return c.Get(a.ref)
 }
 
@@ -45,7 +45,7 @@ type serviceMethodCallArg struct {
 	args       []ServiceDefArg
 }
 
-func (a *serviceMethodCallArg) evaluate(c *Container) (interface{}, error) {
+func (a *serviceMethodCallArg) Evaluate(c *Container) (interface{}, error) {
 	s, err := c.Get(a.serviceRef)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ type servicesByTagArg struct {
 	tags []fmt.Stringer
 }
 
-func (a *servicesByTagArg) evaluate(c *Container) (interface{}, error) {
+func (a *servicesByTagArg) Evaluate(c *Container) (interface{}, error) {
 	return c.FindByTags(a.tags)
 }
 
@@ -82,7 +82,7 @@ type paramArg struct {
 	paramPath string
 }
 
-func (a *paramArg) evaluate(c *Container) (interface{}, error) {
+func (a *paramArg) Evaluate(c *Container) (interface{}, error) {
 	return c.paramProvider.Get(a.paramPath)
 }
 
@@ -93,7 +93,7 @@ func ParamArg(paramPath string) ServiceDefArg {
 // Context Argument injects the context from di.Container.
 type contextArg struct{}
 
-func (a *contextArg) evaluate(c *Container) (interface{}, error) {
+func (a *contextArg) Evaluate(c *Container) (interface{}, error) {
 	return c.ctx, nil
 }
 
@@ -104,7 +104,7 @@ func ContextArg() ServiceDefArg {
 // Container Argument injects the container from di.Container.
 type containerArg struct{}
 
-func (a *containerArg) evaluate(c *Container) (interface{}, error) {
+func (a *containerArg) Evaluate(c *Container) (interface{}, error) {
 	return c, nil
 }
 
@@ -115,7 +115,7 @@ func ContainerArg() ServiceDefArg {
 // EventBus Argument injects the eventBus from di.EventBus.
 type eventBusArg struct{}
 
-func (a *eventBusArg) evaluate(c *Container) (interface{}, error) {
+func (a *eventBusArg) Evaluate(c *Container) (interface{}, error) {
 	return c.eventBus, nil
 }
 

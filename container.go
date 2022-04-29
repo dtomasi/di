@@ -304,7 +304,7 @@ func (c *Container) evaluateArgs(args []ServiceDefArg) (eArgs []interface{}, err
 	for _, v := range args {
 		var val interface{}
 
-		val, err = v.evaluate(c)
+		val, err = v.Evaluate(c)
 		if err != nil {
 			return
 		}
