@@ -20,8 +20,6 @@ func ExampleNewServiceDef() {
 		Args(
 			// This magic Arg injects the context provided with di container
 			di.ContextArg(),
-			// This magic Arg injects the logger provided with di container
-			di.ServiceArg(di.LoggerService),
 			// Interface Arg can be used for any value type. The passed value must match the target value type
 			// in the provider function
 			di.InterfaceArg("Hello, "),

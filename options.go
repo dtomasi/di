@@ -2,7 +2,6 @@ package di
 
 import (
 	"context"
-	loggerinternal "github.com/dtomasi/di/internal/pkg/logger"
 	eventbus "github.com/dtomasi/go-event-bus/v3"
 	"github.com/go-logr/logr"
 )
@@ -28,7 +27,7 @@ func WithParameterProvider(pp ParameterProvider) Option {
 // For details see: https://github.com/go-logr/logr#a-minimal-logging-api-for-go
 func WithLogrImpl(l logr.Logger) Option {
 	return func(c *Container) {
-		c.logger = loggerinternal.NewInternalLogger(l)
+		c.logger = l
 	}
 }
 

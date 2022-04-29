@@ -3,7 +3,6 @@ package di
 import (
 	"context"
 	"fmt"
-	loggerinternal "github.com/dtomasi/di/internal/pkg/logger"
 	"github.com/dtomasi/di/internal/pkg/utils"
 	"github.com/dtomasi/fakr"
 	"github.com/dtomasi/go-event-bus/v3"
@@ -21,7 +20,7 @@ type Container struct {
 	ctxCancelFun context.CancelFunc
 
 	// logger is used for internal logs.
-	logger *loggerinternal.InternalLogger
+	logger logr.Logger
 
 	// eventBus is the eventbus instance
 	eventBus *eventbus.EventBus
@@ -37,7 +36,7 @@ type Container struct {
 func NewServiceContainer(opts ...Option) *Container {
 	c := &Container{ //nolint:exhaustivestruct
 		ctx:           context.Background(),
-		logger:        loggerinternal.NewInternalLogger(fakr.New()),
+		logger:        fakr.New(),
 		eventBus:      eventbus.NewEventBus(),
 		paramProvider: &NoParameterProvider{},
 		serviceDefs:   NewServiceDefMap(),
@@ -56,10 +55,9 @@ func NewServiceContainer(opts ...Option) *Container {
 	return c
 }
 
-// SetParameterProvider allows to set the parameter provider even after container initialization.
+// SetLogger allows to pass a logr after container initialization.
 func (c *Container) SetLogger(l logr.Logger) {
-	// Wrap the original logger to apply module name
-	c.logger = loggerinternal.NewInternalLogger(l)
+	c.logger = l
 }
 
 // SetParameterProvider allows to set the parameter provider even after container initialization.
@@ -97,7 +95,7 @@ func (c *Container) Set(ref fmt.Stringer, s interface{}) *Container {
 		tags:     []fmt.Stringer{},
 	})
 
-	c.logger.Debug("added a new service via Set()", "service", ref.String())
+	c.logger.V(utils.LogLevelDebug).Info("added a new service via Set()", "service", ref.String())
 
 	return c
 }
@@ -169,14 +167,14 @@ func (c *Container) FindByTags(tags []fmt.Stringer) ([]interface{}, error) {
 func (c *Container) Build() (err error) {
 	defer z.WrapPtrWithOpts(&err, "error while building container", z.WithType(ContainerBuildError))
 
-	c.logger.Debug("starting container build")
+	c.logger.V(utils.LogLevelDebug).Info("starting container build")
 
 	err = c.serviceDefs.Range(func(key fmt.Stringer, serviceDef *ServiceDef) error {
-		c.logger.Debug("building services", "name", key.String())
+		c.logger.V(utils.LogLevelDebug).Info("building services", "name", key.String())
 
 		// skip lazy initializing services here
 		if serviceDef.options.buildOnFirstRequest || serviceDef.options.alwaysRebuild {
-			c.logger.Debug("skipping service because its set to lazy or should be rebuilt on each request",
+			c.logger.V(utils.LogLevelDebug).Info("skipping service because its set to lazy or should be rebuilt on each request",
 				"name", key.String())
 
 			return nil
@@ -202,7 +200,7 @@ func (c *Container) Build() (err error) {
 		return err
 	}
 
-	c.logger.Debug("container built successfully")
+	c.logger.V(utils.LogLevelDebug).Info("container built successfully")
 	c.eventBus.Publish(EventTopicDIReady.String(), c)
 
 	return nil
