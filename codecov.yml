@@ -4,4 +4,5 @@ coverage:
   range: "60...100"
 
 ignore:
-  - "zz_gen_*"
+  - "examples"
+  - "**/zz_gen_*.go"

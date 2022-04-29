@@ -66,6 +66,7 @@ type TestService2 struct {
 
 func NewTestService2(
 	service1 TestInterface,
+	serviceByTag []interface{},
 	isTrue bool,
 	testString string,
 	testStringFromFactory string,
@@ -121,18 +122,22 @@ func BuildContainer() (*di.Container, error) {
 				di.ContainerArg(),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
+			).
+			Tags(
+				di.StringRef("foo"),
 			),
 
 		di.NewServiceDef(di.StringRef("TestService2")).
 			Provider(NewTestService2).
 			Args(
 				di.ServiceArg(di.StringRef("TestService1")),
+				di.ServicesByTagsArg([]fmt.Stringer{di.StringRef("foo")}),
 				di.InterfaceArg(true),
 				di.ParamArg("foo.bar.baz"),
 				di.ServiceMethodCallArg(
 					di.StringRef("TestService1"),
 					"TestFactoryMethod",
-					di.InterfaceArg("test service"),
+					di.InterfaceArg("test-service"),
 				),
 			).
 			Tags(di.StringRef("test")),
@@ -172,6 +177,7 @@ func TestContainer_Build(t *testing.T) {
 	assert.Equal(t, "foo", t2.TestString())
 	assert.IsType(t, &TestService1{}, t2.TestService1()) //nolint:exhaustivestruct
 	assert.True(t, len(t2.testStringFromFactory) > 0)
+	assert.Contains(t, t2.testStringFromFactory, "test-service")
 }
 
 func TestContainer_Build_ConcurrentRead(t *testing.T) {
