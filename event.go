@@ -1,6 +1,6 @@
 package di
 
-//go:generate stringer -type=EventTopic -trimprefix=EventTopic -linecomment
+//go:generate stringer -type=EventTopic -trimprefix=EventTopic -output=zz_gen_eventtopic_string.go -linecomment
 
 type EventTopic int
 

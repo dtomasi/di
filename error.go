@@ -1,6 +1,6 @@
 package di
 
-//go:generate stringer -type=ErrorType
+//go:generate stringer -type=ErrorType -output=zz_gen_errortype_string.go
 
 type ErrorType int
 
@@ -10,9 +10,9 @@ const (
 	ServiceNotFoundError
 	ServiceBuildError
 	ProviderMissingError
-	ProviderNotAFuncError
-	ProviderToManyReturnValuesError
-	ProviderArgCountMismatchError
-	ProviderArgTypeMismatchError
+	CallableNotAFuncError
+	CallableToManyReturnValuesError
+	CallableArgCountMismatchError
+	CallableArgTypeMismatchError
 	ParamProviderNotDefinedError
 )
