@@ -2,6 +2,7 @@ package di
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"sync"
 )
 
@@ -47,14 +48,16 @@ func (rm *ServiceDefMap) Clear() {
 }
 
 func (rm *ServiceDefMap) Range(f func(key fmt.Stringer, def *ServiceDef) error) error {
+	var errs error
+
 	rm.mu.RLock()
 	for k, v := range rm.internal {
 		err := f(k, v)
 		if err != nil {
-			return err
+			errs = multierror.Append(errs, err)
 		}
 	}
 	rm.mu.RUnlock()
 
-	return nil
+	return errs
 }

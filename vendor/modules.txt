@@ -14,6 +14,12 @@ github.com/dtomasi/zerrors
 ## explicit; go 1.16
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
+# github.com/hashicorp/errwrap v1.0.0
+## explicit
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.1
+## explicit; go 1.13
+github.com/hashicorp/go-multierror
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
