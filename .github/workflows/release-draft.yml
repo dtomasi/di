@@ -35,7 +35,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - uses: pre-commit/action@v2.0.3
+      - uses: pre-commit/action@v3.0.0
   coverage:
     runs-on: ubuntu-latest
     steps:
