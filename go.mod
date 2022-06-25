@@ -8,7 +8,7 @@ require (
 	github.com/dtomasi/zerrors v0.3.2
 	github.com/go-logr/logr v1.2.3
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.5
 )
 
 require (
@@ -16,5 +16,5 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
